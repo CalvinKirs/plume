@@ -1,22 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-label="Plume">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#2563eb"/>
-      <stop offset="1" stop-color="#0d9488"/>
-    </linearGradient>
+    <linearGradient id="f" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5eead4"/><stop offset="1" stop-color="#818cf8"/></linearGradient>
+    <mask id="cut" maskUnits="userSpaceOnUse" x="-64" y="-70" width="128" height="150">
+      <rect x="-64" y="-70" width="128" height="150" fill="#fff"/>
+      <path d="M-1 -50 C2 -20 1 10 -3 38" stroke="#000" stroke-width="3" stroke-linecap="round" fill="none"/>
+    </mask>
   </defs>
-  <rect width="128" height="128" rx="28" fill="url(#bg)"/>
-  <!-- A slender feather drawn upright, then swung to point up and right:
-       vane, bare quill below it, and barbs sweeping toward the tip. -->
-  <g transform="translate(62 66) rotate(42) scale(0.94)">
-    <path fill="#ffffff" d="M0 -54 C 20 -38 25 -6 12 28 C 9 36 4 42 0 46 C -4 42 -9 34 -12 26 C -24 -6 -20 -38 0 -54 Z"/>
-    <path d="M0 -50 L0 66" stroke="#ffffff" stroke-width="5" stroke-linecap="round" fill="none"/>
-    <g stroke="#0e7490" stroke-width="3.2" stroke-linecap="round" fill="none">
-      <path d="M0 -26 L-13 -36"/><path d="M0 -26 L14 -36"/>
-      <path d="M0 -8 L-17 -19"/><path d="M0 -8 L18 -19"/>
-      <path d="M0 10 L-17 -1"/><path d="M0 10 L17 -1"/>
-      <path d="M0 27 L-11 17"/><path d="M0 27 L10 17"/>
-    </g>
-    <path d="M0 -50 L0 44" stroke="#0e7490" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+  <rect width="128" height="128" rx="28" fill="#111827"/>
+  <!-- An original quill: asymmetric vane with stepped barbs, a split shaft and a bare tip. -->
+  <g transform="translate(66 60) rotate(38) scale(.98)">
+    <g mask="url(#cut)"><path fill="url(#f)" d="M0 -60 C-18 -42 -28 -8 -15 26 C-11 34 -7 38 -4 41 C6 36 10 30 10 21 L23 23 C25 12 19 8 15 0 L29 -2 C28 -14 20 -18 14 -24 L27 -30 C22 -44 12 -54 0 -60 Z"/></g>
+    <path d="M-4 38 L-8 68" stroke="#a5b4fc" stroke-width="4.5" stroke-linecap="round"/>
   </g>
 </svg>
