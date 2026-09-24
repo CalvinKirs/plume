@@ -20,7 +20,8 @@ jobs:
       - name: The tag must match the version in the code
         if: startsWith(github.ref, 'refs/tags/')
         run: test "v$(PYTHONPATH=server python3 -c 'import plume; print(plume.__version__)')" = "${GITHUB_REF_NAME}"
-      - run: python3 -m unittest discover -s server/tests
+      - run: python3 -m unittest discover -s tests
+        working-directory: server
       - run: ./packaging/build.sh ${{ matrix.name }}
       - name: The built program starts and reports its version
         run: ./dist/plume/plume --version
