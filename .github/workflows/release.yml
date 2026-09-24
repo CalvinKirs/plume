@@ -17,8 +17,13 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
+      - name: The tag must match the version in the code
+        if: startsWith(github.ref, 'refs/tags/')
+        run: test "v$(PYTHONPATH=server python3 -c 'import plume; print(plume.__version__)')" = "${GITHUB_REF_NAME}"
       - run: python3 -m unittest discover -s server/tests
       - run: ./packaging/build.sh ${{ matrix.name }}
+      - name: The built program starts and reports its version
+        run: ./dist/plume/plume --version
       - uses: actions/upload-artifact@v4
         with: { name: "${{ matrix.name }}", path: "dist/${{ matrix.name }}.tar.gz" }
 
@@ -31,4 +36,6 @@ jobs:
       - uses: actions/download-artifact@v4
         with: { path: dist, merge-multiple: true }
       - uses: softprops/action-gh-release@v2
-        with: { files: dist/*.tar.gz }
+        with:
+          files: dist/*.tar.gz
+          prerelease: ${{ contains(github.ref_name, '-') }}
