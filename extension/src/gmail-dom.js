@@ -21,6 +21,11 @@
     '[role="button"][data-tooltip^="\u653e\u5f03"]', '[role="button"][aria-label^="\u653e\u5f03"]',
   ].join(',');
 
+  // Markup that can carry someone else's content: the body of a received message (Gmail's .a3s) and
+  // the editor, which holds a quoted copy of it. Recipients are never read from inside these, so a
+  // crafted message cannot add recipients to your reply.
+  const UNTRUSTED = '.a3s, [role="textbox"][g_editable="true"], [aria-label="Message Body"]';
+
   const ADDRESS = /[^\s<>,;"']+@[^\s<>,;"']+/g;
 
   function emailsIn(text) {
@@ -29,9 +34,10 @@
 
   function recipients(compose, field) {
     const found = [];
-    compose.querySelectorAll(`input[name="${field}"], textarea[name="${field}"]`)
+    const trusted = (el) => !el.closest(UNTRUSTED);
+    [...compose.querySelectorAll(`input[name="${field}"], textarea[name="${field}"]`)].filter(trusted)
       .forEach((el) => found.push(...emailsIn(el.value)));
-    compose.querySelectorAll(`[name="${field}"] [email], [name="${field}"] [data-hovercard-id]`)
+    [...compose.querySelectorAll(`[name="${field}"] [email], [name="${field}"] [data-hovercard-id]`)].filter(trusted)
       .forEach((el) => found.push(...emailsIn(el.getAttribute('email') || el.getAttribute('data-hovercard-id'))));
     const seen = new Set();
     return found.filter((a) => {

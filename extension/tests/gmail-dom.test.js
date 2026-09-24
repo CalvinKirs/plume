@@ -92,3 +92,20 @@ test('body fallback: no visible editor gives an empty string, and the editors ar
   assert.strictEqual(gmail.readBodyNear(doc.getElementById('send'), shown), '');
   assert.match(gmail.describeEditors(doc, shown), /1 editor\(s\) on the page, 0 visible, text length of each: hidden 1/);
 });
+
+test('recipients are never read from received messages or from the editor', () => {
+  const doc = page(`<div role="main"><div class="thread">
+    <div class="a3s"><div name="bcc"><span email="attacker@evil.example"></span></div>
+      <input name="bcc" value="also@evil.example"></div>
+    <div class="reply">
+      <div class="hdr"><div name="to"><span email="dev@apache.org"></span></div><input name="subjectbox" value="Re: x"></div>
+      <div class="inner">
+        <div role="textbox" g_editable="true">text<div name="cc"><span email="quoted@evil.example"></span></div></div>
+        <div role="button" class="aoO">Send</div>
+      </div>
+    </div></div></div>`);
+  const [compose] = gmail.findComposeWindows(doc);
+  assert.ok(compose.querySelector('.a3s'), 'the widened compose root does include the received message');
+  const d = gmail.readDraft(compose);
+  assert.deepStrictEqual([d.to, d.cc, d.bcc], [['dev@apache.org'], [], []]);
+});
