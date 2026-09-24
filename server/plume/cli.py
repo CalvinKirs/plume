@@ -2,6 +2,9 @@ import argparse
 import getpass
 import logging
 import os
+import platform
+import smtplib
+import ssl
 import sys
 from http.server import ThreadingHTTPServer
 
@@ -11,6 +14,8 @@ from .config import DEFAULT_CONFIG_PATH, ensure_private_dir, load_config, save_c
 from .install import BROWSERS, install_host
 from .native import serve as serve_native
 from .oauth import run_local_auth
+from .relay import connect
+from .tls import default_context
 from .tokens import FileTokenStore
 from .wiring import UnconfiguredService, build_oauth, build_service
 
@@ -83,6 +88,21 @@ def cmd_setup(cfg, args):
         input("\nPress Enter to close this window.")  # a double-clicked console would vanish otherwise
 
 
+def cmd_check(cfg, args):
+    """Connect to the relay and verify its certificate, without logging in or sending anything."""
+    ctx = default_context()
+    print(f"plume {__version__}, Python {platform.python_version()}, {ssl.OPENSSL_VERSION}")
+    print(f"trusted certificates loaded: {ctx.cert_store_stats().get('x509_ca', 0)}")
+    try:
+        with connect(cfg.smtp_host, cfg.smtp_port, ctx) as smtp:
+            cert = smtp.sock.getpeercert()
+    except (OSError, smtplib.SMTPException) as e:
+        raise SystemExit(f"cannot connect to {cfg.smtp_host}:{cfg.smtp_port}: {e}")
+    subject = dict(item[0] for item in cert["subject"]).get("commonName", "?")
+    issuer = dict(item[0] for item in cert["issuer"]).get("organizationName", "?")
+    print(f"{cfg.smtp_host}:{cfg.smtp_port}: TLS verified. Certificate for {subject}, issued by {issuer}, valid until {cert['notAfter']}.")
+
+
 def cmd_install_host(cfg, args):
     for path in install_host(browsers=args.browser):
         print("registered:", path)
@@ -93,7 +113,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(prog="plume")
     parser.add_argument("--version", action="version", version=f"plume {__version__}")
     sub = parser.add_subparsers(dest="command")
-    for name in ("serve", "native", "auth", "setup", "configure"):
+    for name in ("serve", "native", "auth", "setup", "configure", "check"):
         sub.add_parser(name)
     inst = sub.add_parser("install-host")
     inst.add_argument("--browser", action="append", choices=BROWSERS)
@@ -102,7 +122,7 @@ def main(argv=None):
         return cmd_native(None, None)  # Chrome launched us as a native host
     args = parser.parse_args(argv)
     handlers = {"serve": cmd_serve, "native": cmd_native, "auth": cmd_auth, "setup": cmd_setup,
-                "configure": cmd_configure, "install-host": cmd_install_host}
+                "configure": cmd_configure, "install-host": cmd_install_host, "check": cmd_check}
     args.command = args.command or "setup"  # double-clicked binary: run the guided setup
     # The native host loads its own config, so a broken file is reported back to the extension.
     handlers[args.command](None if args.command == "native" else load_config(), args)

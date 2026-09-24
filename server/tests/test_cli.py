@@ -50,5 +50,44 @@ class CliDispatchTests(unittest.TestCase):
         native.assert_called_once()
 
 
+class CheckCommandTests(unittest.TestCase):
+    class Connection:
+        def __init__(self, cert):
+            self.sock = type("Sock", (), {"getpeercert": lambda _self: cert})()
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+    def run_check(self, connect):
+        import contextlib
+        from plume import cli
+        from plume.config import Config
+
+        out = io.StringIO()
+        with mock.patch.object(cli, "connect", connect), contextlib.redirect_stdout(out):
+            cli.cmd_check(Config(smtp_host="relay.example", smtp_port=587), None)
+        return out.getvalue()
+
+    def test_reports_the_version_the_certificate_store_and_the_verified_certificate(self):
+        cert = {"subject": ((("commonName", "relay.example"),),), "issuer": ((("organizationName", "Some CA"),),), "notAfter": "Jan  1 00:00:00 2030 GMT"}
+        text = self.run_check(lambda host, port, ctx: self.Connection(cert))
+        self.assertIn("plume ", text)
+        self.assertIn("trusted certificates loaded:", text)
+        self.assertIn("relay.example:587: TLS verified. Certificate for relay.example, issued by Some CA", text)
+
+    def test_a_failed_handshake_ends_with_the_reason(self):
+        import ssl
+
+        def refuse(host, port, ctx):
+            raise ssl.SSLCertVerificationError("unable to get local issuer certificate")
+        with self.assertRaises(SystemExit) as raised:
+            self.run_check(refuse)
+        self.assertIn("cannot connect to relay.example:587", str(raised.exception))
+        self.assertIn("unable to get local issuer certificate", str(raised.exception))
+
+
 if __name__ == "__main__":
     unittest.main()
