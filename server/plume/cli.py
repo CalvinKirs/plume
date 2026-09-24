@@ -5,6 +5,7 @@ import os
 import sys
 from http.server import ThreadingHTTPServer
 
+from . import __version__
 from .app import make_handler
 from .config import DEFAULT_CONFIG_PATH, ensure_private_dir, load_config, save_config
 from .install import BROWSERS, install_host
@@ -90,6 +91,7 @@ def cmd_install_host(cfg, args):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(prog="plume")
+    parser.add_argument("--version", action="version", version=f"plume {__version__}")
     sub = parser.add_subparsers(dest="command")
     for name in ("serve", "native", "auth", "setup", "configure"):
         sub.add_parser(name)
