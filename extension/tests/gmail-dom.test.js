@@ -17,6 +17,7 @@ test('finds a compose and reads recipients, subject and body', () => {
 });
 
 test('works with a Chinese UI (labels differ, classes do not)', () => {
+  // Chinese interface: the labels for "Send" and "Discard draft", written as Unicode escapes.
   const doc = page(composeHtml({ send: '\u53d1\u9001', discard: '\u653e\u5f03\u8349\u7a3f' }));
   const [compose] = gmail.findComposeWindows(doc);
   assert.ok(gmail.findSendButton(compose));

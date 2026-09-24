@@ -4,7 +4,8 @@
   const P = (root.Plume = root.Plume || {});
 
   // The class .aoO marks Gmail's Send button and does not depend on the interface language.
-  // The label matches cover the English and Chinese interfaces.
+  // The label matches cover the English and Chinese interfaces. The Chinese labels are written as
+  // Unicode escapes: \u53d1\u9001 is "Send" and \u653e\u5f03 is "Discard".
   const SEND = [
     '.aoO[role="button"]',
     '[role="button"][data-tooltip^="Send"]', '[role="button"][aria-label^="Send"]',

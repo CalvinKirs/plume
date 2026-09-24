@@ -50,6 +50,8 @@
         return notify('error', 'Plume: nothing sent, the message body reads as empty',
           `${gmail.bodyCandidates(compose)} editor(s) found. Type some text. (Or Gmail's layout changed.)`);
       }
+      // Matches "Re:" in English and the Chinese equivalents (\u56de\u590d and \u7b54\u590d, both meaning
+      // "reply"), followed by an ASCII colon or the full-width one (\uff1a).
       const isReply = /^\s*(re|\u56de\u590d|\u7b54\u590d)\s*[:\uff1a]/i.test(draft.subject);
       const found = isReply ? await replyContext.fetchReplyContext(document, location, fetch.bind(window)) : { ctx: null, reason: null };
       const ctx = found.ctx;
