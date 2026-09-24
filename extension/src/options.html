@@ -1,0 +1,27 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Plume options</title>
+<style>
+  body { font: 14px system-ui, sans-serif; max-width: 460px; margin: 32px auto; }
+  label { display: block; margin: 14px 0 4px; font-weight: 600; }
+  input { width: 100%; padding: 6px 8px; box-sizing: border-box; }
+  button { margin-top: 18px; padding: 6px 16px; }
+  #status { margin-left: 12px; color: #1e7e34; }
+  small { color: #666; }
+</style>
+<h1>Plume</h1>
+<label for="from">Send as</label>
+<input id="from" type="email" placeholder="uid@apache.org">
+<details>
+  <summary>Advanced: use the HTTP server instead of the native host</summary>
+  <label for="mode">Transport</label>
+  <select id="mode"><option value="native">Native host (default)</option><option value="http">HTTP server</option></select>
+  <label for="token">Token</label>
+  <input id="token" type="password" autocomplete="off">
+  <small>Same value as PLUME_TOKEN of `python3 -m plume serve`. Stored only in this browser.</small>
+  <label for="port">Server port</label>
+  <input id="port" type="number" min="1" max="65535">
+</details>
+<button id="save">Save</button><span id="status"></span>
+<script src="settings.js"></script>
+<script src="options.js"></script>
