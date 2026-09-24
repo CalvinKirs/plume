@@ -1,0 +1,100 @@
+// Every Gmail-specific selector lives in this file. When Gmail changes its markup,
+// this is the only place to touch (see docs/selectors.md).
+(function (root) {
+  const P = (root.Plume = root.Plume || {});
+
+  // Class .aoO is Gmail's send button and does not depend on the UI language;
+  // the label matches cover English and Chinese UIs.
+  const SEND = [
+    '.aoO[role="button"]',
+    '[role="button"][data-tooltip^="Send"]', '[role="button"][aria-label^="Send"]',
+    '[role="button"][data-tooltip^="\u53d1\u9001"]', '[role="button"][aria-label^="\u53d1\u9001"]',
+  ].join(',');
+  const BODY = 'div[role="textbox"][g_editable="true"], div[role="textbox"][aria-label="Message Body"]';
+  // Gmail also keeps a hidden textarea copy of the body (and plain-text mode uses a textarea).
+  const BODY_TEXTAREA = 'textarea[aria-label="Message Body"], textarea[name="body"]';
+  const SUBJECT = 'input[name="subjectbox"]';
+  const DISCARD = [
+    '.og[role="button"]',
+    '[role="button"][data-tooltip^="Discard"]', '[role="button"][aria-label^="Discard"]',
+    '[role="button"][data-tooltip^="\u653e\u5f03"]', '[role="button"][aria-label^="\u653e\u5f03"]',
+  ].join(',');
+
+  const ADDRESS = /[^\s<>,;"']+@[^\s<>,;"']+/g;
+
+  function emailsIn(text) {
+    return (text || '').match(ADDRESS) || [];
+  }
+
+  function recipients(compose, field) {
+    const found = [];
+    compose.querySelectorAll(`input[name="${field}"], textarea[name="${field}"]`)
+      .forEach((el) => found.push(...emailsIn(el.value)));
+    compose.querySelectorAll(`[name="${field}"] [email], [name="${field}"] [data-hovercard-id]`)
+      .forEach((el) => found.push(...emailsIn(el.getAttribute('email') || el.getAttribute('data-hovercard-id'))));
+    const seen = new Set();
+    return found.filter((a) => {
+      const k = a.toLowerCase();
+      return seen.has(k) ? false : (seen.add(k), true);
+    });
+  }
+
+  const MAX_WIDEN = 12;
+
+  // A compose starts at the smallest ancestor of a message body that also holds a send button,
+  // then widens while the parent still holds only this one body: the recipient and subject rows
+  // are often siblings of that smallest ancestor, not inside it.
+  function findComposeWindows(scope) {
+    const composes = [];
+    scope.querySelectorAll(BODY).forEach((body) => {
+      let el = body.parentElement;
+      while (el && !el.querySelector(SEND)) el = el.parentElement;
+      if (!el) return;
+      for (let i = 0; i < MAX_WIDEN; i++) {
+        const parent = el.parentElement;
+        if (!parent || parent.tagName === 'BODY' || parent.getAttribute('role') === 'main') break;
+        if (parent.querySelectorAll(BODY).length !== 1) break;
+        el = parent;
+      }
+      if (!composes.includes(el)) composes.push(el);
+    });
+    return composes;
+  }
+
+  const findBody = (c) => c.querySelector(BODY);
+  const bodyCandidates = (c) => c.querySelectorAll(BODY).length + c.querySelectorAll(BODY_TEXTAREA).length;
+
+  // First editor that actually holds text: rich editors first, textarea copies as a fallback.
+  function readBodyText(compose) {
+    for (const el of compose.querySelectorAll(BODY)) {
+      const text = P.domToText(el);
+      if (text.trim()) return text;
+    }
+    for (const el of compose.querySelectorAll(BODY_TEXTAREA)) {
+      if (el.value && el.value.trim()) return el.value.replace(/\r\n/g, '\n');
+    }
+    return '';
+  }
+  const findSendButton = (c) => c.querySelector(SEND);
+  const findDiscardButton = (c) => c.querySelector(DISCARD);
+
+  function readDraft(compose) {
+    const subject = compose.querySelector(SUBJECT);
+    return {
+      to: recipients(compose, 'to'),
+      cc: recipients(compose, 'cc'),
+      bcc: recipients(compose, 'bcc'),
+      subject: subject ? subject.value : '',
+      text: readBodyText(compose),
+    };
+  }
+
+  // Where our button goes: right after the send button's toolbar cell.
+  function buttonAnchor(compose) {
+    const send = findSendButton(compose);
+    return send ? send.closest('td') || send.parentElement : null;
+  }
+
+  P.gmail = { findComposeWindows, findBody, bodyCandidates, readBodyText, findSendButton, findDiscardButton, readDraft, buttonAnchor, recipients };
+  if (typeof module !== 'undefined') module.exports = P.gmail;
+})(typeof globalThis !== 'undefined' ? globalThis : this);
