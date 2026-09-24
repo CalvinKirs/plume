@@ -58,6 +58,19 @@ class NativeTests(unittest.TestCase):
         self.assertIn("undecodable", out[0]["error"])
         self.assertIn("unknown", out[1]["error"])
 
+    def test_an_absurd_length_is_refused_without_reading_or_allocating_it(self):
+        class Refuses:
+            def read(self, n):
+                if n > 4:
+                    raise AssertionError("tried to read the oversized body")
+                return struct.pack("=I", 0xFFFFFFF0)[:n]
+
+        out = io.BytesIO()
+        serve(SendService(Mailer()), Refuses(), out)
+        (reply,) = replies(out.getvalue())
+        self.assertFalse(reply["ok"])
+        self.assertIn("exceeds the limit", reply["error"])
+
     def test_truncated_input_ends_quietly(self):
         self.assertEqual(self.run_host(struct.pack("=I", 50) + b"short"), [])
 

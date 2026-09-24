@@ -7,6 +7,13 @@ from .api import send_payload
 
 log = logging.getLogger("plume.native")
 
+# Well above any plain-text mail. The length comes from the caller, and Python would try to allocate it.
+MAX_MESSAGE = 32 * 1024 * 1024
+
+
+class MessageTooLarge(ValueError):
+    pass
+
 
 def read_message(stream):
     """Return the next message, or None at end of input. Raises ValueError if the JSON cannot be decoded."""
@@ -14,6 +21,8 @@ def read_message(stream):
     if len(header) < 4:
         return None
     (size,) = struct.unpack("=I", header)  # Chrome uses the machine's native byte order.
+    if size > MAX_MESSAGE:
+        raise MessageTooLarge(f"message of {size} bytes exceeds the limit of {MAX_MESSAGE}")
     data = stream.read(size)
     if len(data) < size:
         return None
@@ -31,6 +40,10 @@ def serve(service, stdin, stdout):
     while True:
         try:
             msg = read_message(stdin)
+        except MessageTooLarge as e:
+            # The stream cannot be resynchronised after an oversized header, so answer once and stop.
+            write_message(stdout, {"ok": False, "error": str(e)})
+            return
         except ValueError:
             write_message(stdout, {"ok": False, "error": "undecodable message"})
             continue
