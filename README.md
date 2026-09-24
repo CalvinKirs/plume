@@ -15,17 +15,12 @@ Plume is an independent project. It is not affiliated with or endorsed by the Ap
 ## Status
 
 This is an early version. It has been used to send mail as `@apache.org` from Gmail on macOS (Apple
-silicon), including Cc and Bcc on new messages. What is missing or unfinished:
-
-- Attachments and HTML formatting. Messages are sent as plain text.
-- Windows support.
-- A Chrome Web Store listing and published release binaries. For now you load the extension from a
-  checkout and build the program yourself.
-- Inline replies (the box that opens inside a thread) still have rough edges around recipients and
-  reply headers.
-
-Gmail's page markup is not a public API, so a Gmail update can break the button until the extension is
-adjusted.
+silicon), including Cc and Bcc on new messages. Attachments and HTML formatting are not supported, so
+messages go out as plain text, and there is no Windows support yet. There is also no Chrome Web Store
+listing and no published release, so for now you load the extension from a checkout and build the program
+yourself. Inline replies, the box that opens inside a thread, still have rough edges around recipients and
+reply headers. Gmail's page markup is not a public API, so a Gmail update can break the button until the
+extension is adjusted.
 
 ## Getting started
 
@@ -42,8 +37,7 @@ cd plume
 `chrome://extensions`, turn on Developer mode, choose Load unpacked and select the `extension` directory.
 Enter your `@apache.org` address in the extension's options and restart the browser.
 
-The [user guide](docs/user-guide.md) covers the rest: using the button, keeping a copy in Gmail's Sent
-folder, troubleshooting and uninstalling.
+The [user guide](docs/user-guide.md) covers the rest, including troubleshooting and uninstalling.
 
 ## Development
 
@@ -53,15 +47,11 @@ cd extension && npm install && npm test                 # unit tests, using jsdo
 cd extension && CHROME=/path/to/chrome npm run e2e      # real Chromium against a mock Gmail page
 ```
 
-The code is laid out as follows.
-
-- `server/plume/` is the program that sends mail. `cli.py` provides the commands `setup`, `configure`,
-  `install-host`, `native`, `serve` and `auth`.
-- `extension/` is the Chrome extension (Manifest V3). All Gmail selectors are in `src/gmail-dom.js`; see
-  [docs/selectors.md](docs/selectors.md).
-- `packaging/` holds the PyInstaller build and the one-line installer.
-- [docs/architecture.md](docs/architecture.md) shows how a message travels and who does what, including the
-  ASF mail relay that actually sends it. [docs/design.md](docs/design.md) explains why it is built this way.
+`server/plume/` is the program that sends mail, `extension/` is the Chrome extension (Manifest V3) and
+`packaging/` holds the PyInstaller build and the one-line installer.
+[docs/architecture.md](docs/architecture.md) explains how a message travels from Gmail through the ASF mail
+relay, [docs/design.md](docs/design.md) records why it is built this way, and
+[docs/selectors.md](docs/selectors.md) covers the Gmail selectors, which are the part most likely to break.
 
 ## License
 
