@@ -58,6 +58,31 @@ fs.writeFileSync(path.join(home, '.config', 'plume', 'config.json'),
     check('draft reached the Python host and the relay error came back', /relay failure.*(refused|Errno 111)/i.test(text), text);
     check('button is usable again after a failed send', await page.$eval('.plume-btn', (b) => !b.disabled));
 
+    // Success path: answer as the host would when the relay accepted the mail (the real relay is not reachable here).
+    await sw.evaluate(() => { chrome.runtime.sendNativeMessage = async () => { await new Promise((r) => setTimeout(r, 400)); return { ok: true, messageId: '<e2e@apache.org>', archived: false }; }; });
+    await page.evaluate(() => document.querySelectorAll('.plume-toast').forEach((e) => e.remove()));
+    let sawSending = false;
+    const label = page.waitForFunction(() => document.querySelector('.plume-btn') && document.querySelector('.plume-btn').textContent === 'Sending…', null, { timeout: 3000 }).then(() => { sawSending = true; }).catch(() => {});
+    await page.click('.plume-btn');
+    // The subject is "Re: ..." but the mock page has no thread to read: sent, yet a visible warning about threading.
+    const warn = await page.waitForSelector('.plume-toast-warn', { timeout: 10000 });
+    const warnText = await warn.textContent();
+    await label;
+    check('a reply that could not be threaded is sent with an amber warning',
+      /✓ Sent as me@apache.org/.test(warnText) && /Not threaded for list readers/.test(warnText), JSON.stringify(warnText));
+    check('the button shows Sending… while working', sawSending);
+    check('the button gets its label back afterwards', (await page.$eval('.plume-btn', (b) => b.textContent)) === 'Send as apache.org');
+    await page.evaluate(() => document.querySelectorAll('.plume-toast').forEach((e) => e.remove()));
+
+    await page.evaluate(() => { document.querySelector('input[name="subjectbox"]').value = 'plain subject'; });
+    await page.click('.plume-btn');
+    const ok = await page.waitForSelector('.plume-toast-success', { timeout: 10000 });
+    const okText = await ok.textContent();
+    check('success is a prominent green notification naming the sender, recipients and relay',
+      /✓ Sent as me@apache.org/.test(okText) && /To: dev@apache.org, bob@example.org/.test(okText) && /Cc: carol@example.org/.test(okText) && /Accepted by the ASF mail relay/.test(okText), JSON.stringify(okText));
+    await page.click('.plume-toast-success'); // click dismisses
+    check('a notification is dismissed by clicking it', (await page.$$('.plume-toast-success')).length === 0);
+
     // A second compose in the same container changes how far the first one's root widens.
     // That must not stack a second button on the first compose's Send button.
     const second = composeHtml({ split: true, subject: 'other' });

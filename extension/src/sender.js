@@ -17,7 +17,10 @@
   }
 
   const fail = (error) => ({ ok: false, error });
-  const done = (data) => ({ ok: true, archived: !!data.archived, archiveError: data.archiveError || null });
+  const done = (data, payload) => ({
+    ok: true, from: payload.from, messageId: data.messageId || null,
+    archived: !!data.archived, archiveError: data.archiveError || null,
+  });
 
   // Default: Chrome launches the local Plume host on demand (native messaging).
   async function viaNative(payload, runtime, timeoutMs) {
@@ -41,7 +44,7 @@
       clearTimeout(timer);
     }
     if (!data) return fail('The Plume host did not answer (it exited early).');
-    return data.ok ? done(data) : fail(data.error || 'Plume host reported an error');
+    return data.ok ? done(data, payload) : fail(data.error || 'Plume host reported an error');
   }
 
   // Advanced: talk to `python3 -m plume serve` over localhost HTTP (debugging, no host install).
@@ -59,7 +62,7 @@
     }
     let data = {};
     try { data = await res.json(); } catch (e) { /* non-JSON error page */ }
-    return res.ok ? done(data) : fail(data.error || `Plume server answered HTTP ${res.status}`);
+    return res.ok ? done(data, payload) : fail(data.error || `Plume server answered HTTP ${res.status}`);
   }
 
   // deps = { runtime, fetch }. Returns {ok, ...}; never throws, so the caller only shows the outcome.
