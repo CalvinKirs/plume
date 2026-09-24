@@ -32,7 +32,8 @@ sh -c "$(curl -fsSL https://raw.githubusercontent.com/CalvinKirs/plume/main/pack
 
 Then download `plume-extension.zip` from the [releases page](https://github.com/CalvinKirs/plume/releases)
 and unzip it. Open `chrome://extensions`, turn on Developer mode, choose Load unpacked and select the
-unzipped folder. Enter your `@apache.org` address in the extension's options and restart the browser.
+unzipped folder. Enter your `@apache.org` address in the extension's options, plus your name if you want it shown to
+recipients, and restart the browser.
 
 To build the program from source instead, you need Python 3.11 or newer:
 

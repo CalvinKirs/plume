@@ -48,8 +48,9 @@ cd plume
 Plume is not in the Chrome Web Store yet, so you load it by hand. Download `plume-extension.zip` from the
 [releases page](https://github.com/CalvinKirs/plume/releases) and unzip it. If you have a checkout of the
 repository, its `extension` directory works as well. Open `chrome://extensions`, turn on Developer mode,
-choose Load unpacked and select the folder. Then open the extension's Options, enter your `@apache.org`
-address and save. Finally, quit the browser completely (Cmd+Q on macOS) and start it again. That is only
+choose Load unpacked and select the folder. Then open the extension's Options and enter your `@apache.org`
+address. If you want recipients to see your name next to it, as in `Calvin Kirs <kirs@apache.org>`, fill in
+Your name as well. Without a name, only the bare address is shown. Save, and finally quit the browser completely (Cmd+Q on macOS) and start it again. That is only
 needed once, so that the browser notices the program you registered. After you update the extension, press
 its Reload button on `chrome://extensions` and refresh the Gmail tab.
 
