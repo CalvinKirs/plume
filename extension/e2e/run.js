@@ -83,6 +83,17 @@ fs.writeFileSync(path.join(home, '.config', 'plume', 'config.json'),
     await page.click('.plume-toast-success'); // click dismisses
     check('a notification is dismissed by clicking it', (await page.$$('.plume-toast-success')).length === 0);
 
+    const log = (await sw.evaluate(() => chrome.storage.local.get('history'))).history;
+    check('every send attempt is logged, newest first, without the message text',
+      log.length >= 3 && log[0].ok === true && log[0].relayResponse === '250 2.0.0 Ok: queued as E2E42' && log.some((e) => !e.ok && /relay failure/.test(e.error)) && !JSON.stringify(log).includes('thanks'),
+      `entries=${log.length}`);
+    const opts = await ctx.newPage();
+    await opts.goto(`chrome-extension://mabkbpnhmakajgmgpcehigllechcaehb/src/options.html`);
+    await opts.waitForSelector('#history tbody tr');
+    const rows = await opts.$$eval('#history tbody tr', (trs) => trs.map((tr) => tr.textContent));
+    check('the options page lists the recent sends with their outcome', rows.length >= 3 && /✓ sent/.test(rows[0]) && /queued as E2E42/.test(rows[0]) && rows.some((r) => /✗ not sent/.test(r)), rows[0]);
+    await opts.close();
+
     // A second compose in the same container changes how far the first one's root widens.
     // That must not stack a second button on the first compose's Send button.
     const second = composeHtml({ split: true, subject: 'other' });

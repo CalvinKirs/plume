@@ -73,6 +73,10 @@ Fill in To, Cc and Bcc as usual, write your text and click it. Plume sends the m
 | `... no copy in Gmail Sent, write-back is not set up` | Sent, but Gmail has no copy in its Sent folder. See *Keep a copy in Gmail Sent*. |
 | `... reply headers unavailable: <reason>` | Sent, but as a new thread for list readers, because Plume could not read the original message's ID. |
 
+**Recent sends:** the extension's **Options** page lists your last 50 sends (time, result, recipients, subject, the
+relay's queue reply and the Message-ID), so you can check a message even if you missed the notification.
+The list is kept only in this browser and never contains the message text; **Clear the list** empties it.
+
 **Dry run:** hold **Option** (Mac) or **Alt** and click the button. Nothing is sent; Plume shows what it read
 (To, Cc, Bcc, subject, body size, whether reply headers were found). Use it to check a message first.
 
@@ -135,6 +139,7 @@ the recipient's mail server, spam filtering, list moderation) is outside Plume. 
 - Your LDAP password is kept in `~/.config/plume/config.json` with permission 0600 (readable only by you).
   It is **not encrypted**; anyone who can read your files as you can read it. Storing it in the system keychain is planned.
 - Only the extension with Plume's fixed ID may start the program. The program opens no network port.
+- The extension keeps a log of your last 50 sends (recipients, subject, outcome, no message text) in this browser only.
 - The extension works only on `mail.google.com`. It reads a draft only when you click the button.
 - Plume connects to `mail-relay.apache.org` (and to Google only if you enabled the Gmail Sent copy).
   There are no analytics and no other servers.

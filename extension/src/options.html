@@ -8,6 +8,11 @@
   button { margin-top: 18px; padding: 6px 16px; }
   #status { margin-left: 12px; color: #1e7e34; }
   small { color: #666; }
+  table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #ddd; vertical-align: top; overflow-wrap: anywhere; }
+  .ok { color: #15803d; font-weight: 600; } .bad { color: #b91c1c; font-weight: 600; }
+  .dim { color: #666; }
+  body { max-width: 860px; }
 </style>
 <h1 style="display:flex;align-items:center;gap:12px"><img src="../icons/icon-48.png" width="40" height="40" alt="">Plume</h1>
 <label for="from">Send as</label>
@@ -23,5 +28,15 @@
   <input id="port" type="number" min="1" max="65535">
 </details>
 <button id="save">Save</button><span id="status"></span>
+
+<h2>Recent sends</h2>
+<small>The last 50 sends from this browser: recipients, subject and outcome (never the message text). Stored only here.</small>
+<div id="empty" hidden><p>Nothing sent yet.</p></div>
+<table id="history" hidden>
+  <thead><tr><th>When</th><th>Result</th><th>To</th><th>Subject</th><th>Relay</th></tr></thead>
+  <tbody></tbody>
+</table>
+<button id="clear" hidden>Clear the list</button>
 <script src="settings.js"></script>
+<script src="history.js"></script>
 <script src="options.js"></script>
