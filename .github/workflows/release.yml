@@ -41,9 +41,18 @@ jobs:
       - uses: actions/upload-artifact@v4
         with: { name: plume-macos-arm64, path: dist/plume-macos-arm64.tar.gz }
 
+  extension:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pack only what the browser needs
+        run: cd extension && zip -r ../plume-extension.zip manifest.json src icons
+      - uses: actions/upload-artifact@v4
+        with: { name: plume-extension, path: plume-extension.zip }
+
   release:
     if: startsWith(github.ref, 'refs/tags/')
-    needs: [linux, macos]
+    needs: [linux, macos, extension]
     runs-on: ubuntu-22.04
     permissions: { contents: write }
     steps:
@@ -51,5 +60,7 @@ jobs:
         with: { path: dist, merge-multiple: true }
       - uses: softprops/action-gh-release@v2
         with:
-          files: dist/*.tar.gz
+          files: |
+            dist/*.tar.gz
+            dist/*.zip
           prerelease: ${{ contains(github.ref_name, '-') }}
