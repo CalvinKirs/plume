@@ -3,6 +3,18 @@
 (function () {
   const { gmail, replyContext } = Plume;
   const sending = new WeakSet();
+  const INSTANCE = Math.random().toString(36).slice(2); // tells this script's buttons from those of an older copy
+  const STALE = 'The extension was reloaded or updated. Refresh this Gmail tab and try again.';
+
+  // After the extension is reloaded, the copy of this script that is still running in an open tab is cut
+  // off from it, and chrome.runtime disappears.
+  function connected() {
+    try {
+      return Boolean(chrome.runtime && chrome.runtime.id);
+    } catch (e) {
+      return false;
+    }
+  }
 
   const HOLD_MS = { success: 12000, warn: 14000, error: 15000, info: 6000 };
 
@@ -35,6 +47,7 @@
   const list = (a) => (a.length ? a.join(', ') : '-');
 
   async function onClick(compose, button, dryRun) {
+    if (!connected()) return notify('error', 'Plume: NOT sent', STALE);
     if (sending.has(button)) return; // Ignore clicks while a send is running, so nothing is sent twice.
     sending.add(button);
     const label = button.textContent;
@@ -83,8 +96,8 @@
     } catch (e) {
       // Report every error. An exception here used to leave the click looking dead.
       const m = String((e && e.message) || e);
-      const stale = /context invalidated|Receiving end|message port closed/i.test(m);
-      notify('error', 'Plume: NOT sent', stale ? 'The extension was reloaded or updated. Refresh this Gmail tab and try again.' : m);
+      const stale = /context invalidated|Receiving end|message port closed|reading 'sendMessage'/i.test(m);
+      notify('error', 'Plume: NOT sent', stale ? STALE : m);
     } finally {
       sending.delete(button);
       button.textContent = label;
@@ -94,10 +107,16 @@
 
   // Each Send button gets exactly one Plume button. The compose root can grow or shrink as the
   // page changes, so the marker sits on the anchor and the root is looked up again on click.
+  // A marker left by an older copy of this script (from before the extension was reloaded) means
+  // that copy's button is dead, so it is replaced.
   function decorate(compose) {
     const anchor = gmail.buttonAnchor(compose);
-    if (!anchor || anchor.dataset.plume) return;
-    anchor.dataset.plume = '1';
+    if (!anchor || anchor.dataset.plume === INSTANCE) return;
+    if (anchor.dataset.plume) {
+      const old = anchor.nextElementSibling;
+      if (old && old.classList.contains('plume-host')) old.remove();
+    }
+    anchor.dataset.plume = INSTANCE;
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'plume-btn';
