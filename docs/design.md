@@ -1,21 +1,77 @@
-# Plume design notes
+# Design notes
 
-## Goal
-Minimal: one button in Gmail compose, one local send service.
+## Overview
 
-## Flow
-1. Extension reads the draft (from, to, cc, bcc, subject, body, threading headers).
-2. Sends it to the local host: Chrome native messaging (default, host started on demand) or `POST /send` on 127.0.0.1 (HTTP mode).
-3. Server submits via `mail-relay.apache.org` using the LDAP account.
-4. Server inserts the sent message into Gmail (Sent label) via the Gmail API and the extension removes the draft.
+Plume has two parts. A Chrome extension adds a button to Gmail's compose window and reads the draft. A
+local program, started by Chrome on demand, signs in to `mail-relay.apache.org` and sends the message.
+Optionally the program also files a copy of the message under Gmail's Sent label.
 
-## Security
-- Native host: only the pinned extension id may launch it; no port is opened. HTTP mode: 127.0.0.1 only, Origin check and bearer token.
-- The LDAP password lives in a 0600 config file (native mode has no shell environment). Moving it to the OS keychain is future work.
+## How a send works
+
+1. The content script reads recipients, subject and text from the compose window. For a reply it also
+   looks up the Message-ID and References of the message being answered.
+2. It passes the draft to the extension's background worker, which forwards it to the local program
+   through Chrome's native messaging. (An HTTP transport exists for debugging.)
+3. The program builds the message and submits it to the relay over SMTP with STARTTLS (port 587) or
+   implicit TLS (port 465), logging in with the ASF LDAP account.
+4. If Gmail write-back is set up, the program inserts a copy into Gmail's Sent folder. A failure here is
+   reported but does not turn the send into a failure, because the mail has already gone out.
+5. The extension shows the outcome, closes the draft and adds an entry to the list of recent sends.
+
+## Structure of the program
+
+The send logic sits behind small interfaces (ports), and each port has a fake in the tests.
+
+```
+app.py (HTTP, debugging) ┐
+native.py (Chrome host)  ┴-> api.send_payload -> service.SendService -> ports.Mailer      <- relay.SmtpRelayMailer
+                                                                       -> ports.SentArchive <- gmail.GmailArchive | archive.NullArchive
+gmail.GmailArchive -> tokens.TokenProvider -> oauth.GoogleOAuth, ports.TokenStore <- tokens.FileTokenStore
+                   -> ports.Transport <- transport.UrllibTransport
+```
+
+`wiring.py` builds this graph from the configuration, and `cli.py` exposes it as commands. Adding another
+kind of archive, such as IMAP APPEND, means implementing `SentArchive` and choosing it in `wiring.py`.
+
+## Decisions
+
+**Native messaging instead of a local HTTP server.** A server would have to be started at login, would
+occupy a port and would need a token to keep other web pages away from it. With native messaging Chrome
+starts the program only when the button is used, and only the extension with the pinned ID can start it.
+The HTTP server is still available for debugging.
+
+**A one-directory build instead of a single file.** A single-file PyInstaller program unpacks itself into
+a new temporary folder on every launch. On macOS, files unpacked by a process that Chrome started get the
+quarantine flag, so Gatekeeper asked about `libpython3.x.dylib` on every send and the host never
+answered. The folder is copied once by `setup`, with the quarantine flag cleared, and nothing is unpacked
+afterwards. Startup is also faster.
+
+**Plain text only.** Mailing lists and PonyMail expect plain text. Quoted replies are converted to lines
+starting with "> ". Attachments are not read from the compose window yet.
+
+**Insert-only Gmail access.** The Sent copy uses `users.messages.insert` with the `gmail.insert` scope,
+which cannot read mail or send it. Authorization uses the loopback flow with PKCE, and the token file is
+readable only by the user.
+
+**A local log of recent sends.** The extension keeps the last 50 sends (recipients, subject, outcome,
+relay reply, Message-ID) in `chrome.storage.local`, never the message text. It lets you check a message
+after the notification has gone, and it gives ASF Infrastructure a queue ID to look for when a message
+arrives late.
+
+## Security model
+
+- Only the extension with the pinned ID may start the native host. The host opens no network port.
+- The relay password is stored in `~/.config/plume/config.json` with mode 0600. It is not encrypted.
+  Moving it to the system keychain is planned.
+- In HTTP mode the server listens on 127.0.0.1 only and requires a bearer token and an allowed Origin.
+- The extension runs only on `mail.google.com` and reads a draft only when the button is clicked.
 
 ## Open questions
-- Does mail-relay require From to equal the authenticated user?
-- Gmail OAuth: token lifetime for an app in "testing" status (possibly 7 days).
-- ~~Port 587/465 reachable?~~ Checked from the dev host: both accept TLS and offer AUTH PLAIN LOGIN (one transient DNS failure on the first 587 try).
-- Gmail OAuth for an unverified app in testing status: refresh token may expire after 7 days; `python3 -m plume auth` again if archive errors mention authorization.
-- Threading and quoting of replies to list mail.
+
+- Whether the relay accepts a From address other than the authenticated user's own. Only the user's own
+  address has been tried.
+- How long the Gmail authorization lasts for an app in "Testing" status. Google may expire it after seven
+  days; this has not been checked.
+- Reply headers depend on Gmail's undocumented "Show original" URL. It has failed in some threads, and the
+  notification now says why.
+- Attachments, HTML formatting, Windows, and storing the password in the keychain.
