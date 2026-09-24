@@ -2,7 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert');
 const { load, entryFor, append, clear } = require('../src/history');
 
-// In-memory stand-in for chrome.storage.local (get with defaults, set).
+// An in-memory stand-in for chrome.storage.local (get with defaults, and set).
 function memory() {
   let data = {};
   return {

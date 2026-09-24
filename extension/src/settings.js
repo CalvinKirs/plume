@@ -2,7 +2,7 @@
   const P = (root.Plume = root.Plume || {});
   const DEFAULTS = { from: '', mode: 'native', token: '', port: 8765 };
 
-  // chrome.storage.local, never sync: the token must not leave this machine.
+  // Use chrome.storage.local rather than sync, so the token never leaves this machine.
   async function loadSettings(storage) {
     const stored = await storage.get(DEFAULTS);
     return { ...DEFAULTS, ...stored };

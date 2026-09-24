@@ -1,5 +1,5 @@
-// Best-effort lookup of the RFC 5322 Message-ID / References of the message being answered,
-// so replies thread correctly on mailing lists. Failure is never fatal: callers get null.
+// Looks up the Message-ID and References of the message being answered, so that replies thread
+// correctly on mailing lists. This is best effort: on any failure the caller gets null and a reason.
 (function (root) {
   const P = (root.Plume = root.Plume || {});
 
@@ -24,9 +24,9 @@
     return { inReplyTo: id, references: refs ? `${refs} ${id}` : id };
   }
 
-  // The last message of the thread that is open behind the compose window. Newer Gmail markup
-  // carries the decimal id in data-message-id ("#msg-f:1784..."), older markup a hex
-  // data-legacy-message-id; either becomes a decimal id.
+  // The last message of the thread that is open behind the compose window. Newer Gmail markup has
+  // the decimal id in data-message-id ("#msg-f:1784..."), older markup has a hex
+  // data-legacy-message-id. Both are turned into a decimal id.
   function findReplyTarget(doc) {
     const modern = [...doc.querySelectorAll('[data-message-id]')]
       .filter((el) => /msg-f:\d+/.test(el.getAttribute('data-message-id')));
@@ -53,7 +53,7 @@
     return m ? m[1] : '0';
   }
 
-  // Returns {ctx, reason}: ctx is {inReplyTo, references, threadId} or null, and reason says why it is null.
+  // Resolves to {ctx, reason}. ctx is {inReplyTo, references, threadId}, or null with reason saying why.
   async function fetchReplyContext(doc, loc, fetchFn) {
     const target = findReplyTarget(doc);
     if (!target) return { ctx: null, reason: 'no message id found in the open thread' };

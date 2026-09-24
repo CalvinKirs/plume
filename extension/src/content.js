@@ -1,11 +1,12 @@
-// Thin glue: find compose windows, add the button, send, report. Logic lives in the other modules.
+// Glue code: finds compose windows, adds the button, sends the draft and shows the result.
+// The real logic lives in the other modules.
 (function () {
   const { gmail, replyContext } = Plume;
   const sending = new WeakSet();
 
   const HOLD_MS = { success: 12000, warn: 14000, error: 15000, info: 6000 };
 
-  // kind: success | warn | error | info. Click a notification to dismiss it.
+  // kind is one of success, warn, error or info. Clicking a notification dismisses it.
   function notify(kind, title, detail, ms) {
     let box = document.getElementById('plume-toasts');
     if (!box) {
@@ -34,7 +35,7 @@
   const list = (a) => (a.length ? a.join(', ') : '-');
 
   async function onClick(compose, button, dryRun) {
-    if (sending.has(button)) return; // never send twice
+    if (sending.has(button)) return; // Ignore clicks while a send is running, so nothing is sent twice.
     sending.add(button);
     const label = button.textContent;
     button.textContent = 'Sending…';
@@ -52,7 +53,7 @@
       const isReply = /^\s*(re|\u56de\u590d|\u7b54\u590d)\s*[:\uff1a]/i.test(draft.subject);
       const found = isReply ? await replyContext.fetchReplyContext(document, location, fetch.bind(window)) : { ctx: null, reason: null };
       const ctx = found.ctx;
-      if (dryRun) { // Option/Alt-click: show what would be sent, send nothing
+      if (dryRun) { // Option or Alt click: show what would be sent, without sending it.
         console.log('[Plume dry run]', { draft, ctx });
         return notify('info', 'Plume dry run: nothing was sent',
           `To: ${list(draft.to)}\nCc: ${list(draft.cc)}\nBcc: ${list(draft.bcc)}\nSubject: ${draft.subject}\nBody: ${draft.text.length} characters\nReply headers: ${isReply ? (ctx ? 'found, thread ' + ctx.threadId : 'NOT found: ' + found.reason) : 'not a reply'}`, 30000);
@@ -75,7 +76,7 @@
       if (discard) discard.click(); else lines.push('Close this draft manually.');
       notify(problems.length ? 'warn' : 'success', `✓ Sent as ${res.from}`, lines.concat(problems).join('\n'));
     } catch (e) {
-      // Never fail silently: an error here used to leave the click looking dead.
+      // Report every error. An exception here used to leave the click looking dead.
       const m = String((e && e.message) || e);
       const stale = /context invalidated|Receiving end|message port closed/i.test(m);
       notify('error', 'Plume: NOT sent', stale ? 'The extension was reloaded or updated. Refresh this Gmail tab and try again.' : m);
@@ -86,8 +87,8 @@
     }
   }
 
-  // One button per Send button, whatever compose root is computed: the root can grow or shrink
-  // as the page changes, so the marker lives on the anchor and the root is looked up again on click.
+  // Each Send button gets exactly one Plume button. The compose root can grow or shrink as the
+  // page changes, so the marker sits on the anchor and the root is looked up again on click.
   function decorate(compose) {
     const anchor = gmail.buttonAnchor(compose);
     if (!anchor || anchor.dataset.plume) return;
@@ -100,7 +101,7 @@
       const current = gmail.findComposeWindows(document).find((c) => c.contains(button)) || compose;
       onClick(current, button, e.altKey);
     });
-    // Inside a toolbar row the button needs its own cell; anywhere else a plain wrapper does.
+    // In a toolbar row the button needs its own cell. Elsewhere a plain wrapper is enough.
     const host = document.createElement(anchor.tagName === 'TD' ? 'td' : 'span');
     host.className = 'plume-host';
     host.appendChild(button);

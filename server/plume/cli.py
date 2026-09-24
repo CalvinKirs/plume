@@ -27,7 +27,7 @@ def cmd_serve(cfg, args):
 
 
 def _host_log():
-    """Send warnings and tracebacks to ~/.config/plume/host.log: Chrome discards a native host's stderr."""
+    """Log warnings and tracebacks to ~/.config/plume/host.log, because Chrome throws away a native host's stderr."""
     try:
         path = os.path.expanduser("~/.config/plume/host.log")
         os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -37,7 +37,7 @@ def _host_log():
 
 
 def cmd_native(cfg, args):
-    # stdout is the protocol channel: keep stray prints away from it.
+    # stdout carries the protocol, so stray prints must go to stderr instead.
     out = sys.stdout.buffer
     sys.stdout = sys.stderr
     _host_log()
@@ -70,7 +70,7 @@ def cmd_configure(cfg, args):
 
 
 def cmd_setup(cfg, args):
-    """Guided first run: relay account, then registration with Chrome."""
+    """Guided first run: ask for the relay account, then register the host with Chrome."""
     print("Plume setup\n")
     cmd_configure(cfg, args)
     args.browser = None
@@ -99,5 +99,5 @@ def main(argv=None):
     handlers = {"serve": cmd_serve, "native": cmd_native, "auth": cmd_auth, "setup": cmd_setup,
                 "configure": cmd_configure, "install-host": cmd_install_host}
     args.command = args.command or "setup"  # double-clicked binary: run the guided setup
-    # the native host loads its own config so a broken file is reported to the extension
+    # The native host loads its own config, so a broken file is reported back to the extension.
     handlers[args.command](None if args.command == "native" else load_config(), args)

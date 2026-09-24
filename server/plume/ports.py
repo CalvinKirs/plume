@@ -5,7 +5,7 @@ from typing import Optional, Protocol, Tuple
 
 @dataclass
 class RelayReceipt:
-    """What the relay said when it took the message: its final reply (with the queue id) and how long that took."""
+    """What the relay said when it took the message: its final reply, which includes the queue id, and how long the hand-over took."""
 
     response: str
     seconds: float
@@ -28,4 +28,4 @@ class TokenStore(Protocol):
 
 class Transport(Protocol):
     def request(self, method: str, url: str, headers: dict, body: Optional[bytes]) -> Tuple[int, bytes]:
-        """Return (status, body) for any HTTP status; raise OSError only on network failure."""
+        """Return (status, body) for any HTTP status. Raise OSError only if the network fails."""

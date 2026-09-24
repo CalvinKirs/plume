@@ -3,7 +3,7 @@ import os
 from dataclasses import dataclass, field
 
 
-# The extension's manifest pins a key, so its origin is stable across machines.
+# The manifest pins the extension's key, which fixes its id and therefore its origin.
 EXTENSION_ORIGIN = "chrome-extension://mabkbpnhmakajgmgpcehigllechcaehb"
 
 
@@ -40,10 +40,10 @@ def _read_file(path):
 
 
 def load_config(env=None, path=None):
-    """Settings from the config file, overridden by PLUME_* environment variables.
+    """Read settings from the config file, then apply PLUME_* environment variables on top.
 
-    A browser-launched native host has no shell environment, so the file is the normal source;
-    the environment stays useful for the HTTP server and for tests.
+    Chrome starts the native host without a shell environment, so the file is the normal source.
+    The environment variables are mostly for the HTTP server and for tests.
     """
     env = os.environ if env is None else env
     values = _read_file(path or env.get("PLUME_CONFIG", DEFAULT_CONFIG_PATH))
@@ -62,7 +62,7 @@ def load_config(env=None, path=None):
 
 
 def save_config(values, path=DEFAULT_CONFIG_PATH):
-    """Write the config file with mode 0600 (it holds the relay password)."""
+    """Write the config file with mode 0600, since it holds the relay password."""
     path = os.path.expanduser(path)
     os.makedirs(os.path.dirname(path), exist_ok=True)
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)

@@ -15,7 +15,7 @@ def _addrs(value):
 
 
 def build_message(payload):
-    """Build an EmailMessage from the JSON payload; return (msg, envelope recipients)."""
+    """Build an EmailMessage from the JSON payload. Returns the message and the envelope recipients."""
     sender = _addrs(payload.get("from"))
     to = _addrs(payload.get("to"))
     cc = _addrs(payload.get("cc"))
@@ -43,7 +43,7 @@ def build_message(payload):
             msg["In-Reply-To"] = payload["inReplyTo"]
         if payload.get("references"):
             msg["References"] = payload["references"]
-    except ValueError as e:  # header injection (newlines) and similar
+    except ValueError as e:  # A newline in a header value (header injection) and similar problems end up here.
         raise BadMessage(str(e)) from e
 
     if text:

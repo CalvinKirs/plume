@@ -27,7 +27,7 @@ def build_service(cfg):
 
 
 class UnconfiguredService:
-    """Stands in when Plume cannot start (no credentials, unreadable config): every request gets the reason."""
+    """Stands in when Plume cannot start (no credentials, unreadable config). Every request gets the reason back."""
 
     def __init__(self, reason="Plume is not configured: run `plume setup`"):
         self.reason = reason

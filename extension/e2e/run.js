@@ -1,6 +1,7 @@
-// Real Chromium + the real extension + a mock Gmail page + the real native host (source launcher).
-// Gmail's own markup is NOT exercised here (see docs/selectors.md): this covers the wiring
-// content script -> background -> native messaging -> Python host.
+// End-to-end check: real Chromium, the real extension, a mock Gmail page and the real native host
+// (started through the source launcher). It exercises the wiring from the content script through
+// the background worker and native messaging to the Python host. It does not exercise Gmail's own
+// markup (see docs/selectors.md).
 // Usage: CHROME=/path/to/chrome node e2e/run.js
 const { chromium } = require('playwright-core');
 const { execFileSync } = require('node:child_process');
@@ -14,7 +15,7 @@ const home = fs.mkdtempSync(path.join(os.tmpdir(), 'plume-e2e-'));
 const profile = path.join(home, '.config', 'chromium');
 fs.mkdirSync(profile, { recursive: true });
 
-// Register the host into the throwaway profile and point the relay at a closed port.
+// Register the host in a throwaway profile and point the relay at a closed port.
 execFileSync('python3', ['-c', `from plume.install import install_host; install_host(home=${JSON.stringify(home)}, browsers=["chromium"], system="Linux")`],
   { cwd: path.join(root, 'server'), env: { ...process.env, PYTHONPATH: path.join(root, 'server') } });
 fs.mkdirSync(path.join(home, '.config', 'plume'), { recursive: true });
@@ -58,13 +59,13 @@ fs.writeFileSync(path.join(home, '.config', 'plume', 'config.json'),
     check('draft reached the Python host and the relay error came back', /relay failure.*(refused|Errno 111)/i.test(text), text);
     check('button is usable again after a failed send', await page.$eval('.plume-btn', (b) => !b.disabled));
 
-    // Success path: answer as the host would when the relay accepted the mail (the real relay is not reachable here).
+    // Success path: answer the way the host does when the relay accepts the mail. The real relay is not reachable here.
     await sw.evaluate(() => { chrome.runtime.sendNativeMessage = async () => { await new Promise((r) => setTimeout(r, 400)); return { ok: true, messageId: '<e2e@apache.org>', archived: false, relayResponse: '250 2.0.0 Ok: queued as E2E42', relaySeconds: 0.4 }; }; });
     await page.evaluate(() => document.querySelectorAll('.plume-toast').forEach((e) => e.remove()));
     let sawSending = false;
     const label = page.waitForFunction(() => document.querySelector('.plume-btn') && document.querySelector('.plume-btn').textContent === 'Sending…', null, { timeout: 3000 }).then(() => { sawSending = true; }).catch(() => {});
     await page.click('.plume-btn');
-    // The subject is "Re: ..." but the mock page has no thread to read: sent, yet a visible warning about threading.
+    // The subject starts with "Re:", but the mock page has no thread to read. The mail is still sent, with a visible warning about threading.
     const warn = await page.waitForSelector('.plume-toast-warn', { timeout: 10000 });
     const warnText = await warn.textContent();
     await label;
@@ -94,8 +95,8 @@ fs.writeFileSync(path.join(home, '.config', 'plume', 'config.json'),
     check('the options page lists the recent sends with their outcome', rows.length >= 3 && /✓ sent/.test(rows[0]) && /queued as E2E42/.test(rows[0]) && rows.some((r) => /✗ not sent/.test(r)), rows[0]);
     await opts.close();
 
-    // A second compose in the same container changes how far the first one's root widens.
-    // That must not stack a second button on the first compose's Send button.
+    // A second compose in the same container changes how far the first one's root is widened.
+    // That must not put a second button next to the first compose's Send button.
     const second = composeHtml({ split: true, subject: 'other' });
     await page.evaluate((html) => document.getElementById('wrap').insertAdjacentHTML('beforeend', html), second);
     await page.waitForFunction(() => document.querySelectorAll('.plume-btn').length >= 2, null, { timeout: 5000 });

@@ -15,7 +15,7 @@ $('save').addEventListener('click', async () => {
   setTimeout(() => ($('status').textContent = ''), 2000);
 });
 
-// --- recent sends
+// Recent sends
 function cell(row, text, cls) {
   const td = document.createElement('td');
   td.textContent = text;

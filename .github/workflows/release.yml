@@ -10,7 +10,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - { os: ubuntu-22.04, name: plume-linux-x86_64 }   # old glibc: runs on most distributions
+          - { os: ubuntu-22.04, name: plume-linux-x86_64 }   # older glibc, so the binary runs on most distributions
           - { os: macos-14, name: plume-macos-arm64 }
     runs-on: ${{ matrix.os }}
     steps:

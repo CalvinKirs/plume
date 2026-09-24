@@ -1,5 +1,5 @@
 class NullArchive:
-    """No-op archive, used when Gmail write-back is not configured."""
+    """An archive that does nothing, used when Gmail write-back is not configured."""
 
     def archive(self, msg, thread_id=None):
         raise NotImplementedError

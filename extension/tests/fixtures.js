@@ -1,7 +1,7 @@
 const { JSDOM } = require('jsdom');
 
-// Hand-built approximation of Gmail's compose markup. Not captured from live Gmail:
-// keep it in sync with docs/selectors.md when the real markup is checked.
+// A hand-built approximation of Gmail's compose markup, not captured from live Gmail.
+// Keep it in step with docs/selectors.md once the real markup has been checked.
 function composeHtml({ send = 'Send', discard = 'Discard draft', subject = 'Re: [VOTE] release', body, split = false } = {}) {
   const open = split ? '</div><div class="inner">' : '';
   return `

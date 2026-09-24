@@ -11,11 +11,11 @@ from .errors import AuthError
 
 AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 TOKEN_URL = "https://oauth2.googleapis.com/token"
-SCOPE_INSERT = "https://www.googleapis.com/auth/gmail.insert"  # insert only: cannot read or send mail
+SCOPE_INSERT = "https://www.googleapis.com/auth/gmail.insert"  # Insert only. This scope cannot read or send mail.
 
 
 class GoogleOAuth:
-    """OAuth 2.0 installed-app client (authorization code + PKCE)."""
+    """OAuth 2.0 client for installed apps (authorization code flow with PKCE)."""
 
     def __init__(self, client_id, client_secret, transport, now=time.time):
         self.client_id, self.client_secret, self.transport, self.now = client_id, client_secret, transport, now
@@ -59,7 +59,7 @@ def pkce_pair():
 
 
 def run_local_auth(oauth, store, open_browser=webbrowser.open, out=print, timeout=300):
-    """Interactive one-time authorization through a loopback redirect on 127.0.0.1."""
+    """One-time interactive authorization using a loopback redirect on 127.0.0.1."""
     verifier, challenge = pkce_pair()
     state = secrets.token_urlsafe(16)
     result = {}

@@ -6,7 +6,7 @@ from .ports import RelayReceipt
 
 
 class _RecordsDataReply:
-    """Keeps the relay's answer to DATA: that is where it says `queued as <id>`."""
+    """Remembers the relay's reply to DATA, which is where it says `queued as <id>`."""
 
     def data(self, msg):
         code, response = super().data(msg)
@@ -23,7 +23,7 @@ class _SMTP_SSL(_RecordsDataReply, smtplib.SMTP_SSL):
 
 
 class SmtpRelayMailer:
-    """Submit through an authenticated SMTP relay. Port 465 uses implicit TLS, others STARTTLS."""
+    """Submit through an authenticated SMTP relay. Port 465 uses implicit TLS, other ports use STARTTLS."""
 
     def __init__(self, host, port, user, password):
         self.host, self.port, self.user, self.password = host, port, user, password

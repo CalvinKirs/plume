@@ -12,7 +12,7 @@ from .config import EXTENSION_ORIGIN
 
 HOST_NAME = "org.plume.host"
 
-# browser -> config directory that must exist for the browser to be considered installed
+# Browser name -> profile directory. A browser counts as installed if its directory exists.
 _LINUX = {
     "chrome": ".config/google-chrome", "chromium": ".config/chromium",
     "brave": ".config/BraveSoftware/Brave-Browser", "edge": ".config/microsoft-edge",
@@ -36,20 +36,22 @@ def _frozen_binary():
 
 
 def _strip_quarantine(path):
-    """Best effort: the user just chose to run this program, so its installed copy is not quarantined."""
+    """Try to clear the macOS quarantine flag. The user chose to run this program, so the installed copy should not be quarantined."""
     subprocess.run(["xattr", "-dr", "com.apple.quarantine", path], capture_output=True, check=False)
 
 
 def install_host(home=None, python=None, server_dir=None, browsers=None, system=None, binary=None):
-    """Register the host with each browser; return the manifest paths.
+    """Register the host with each browser and return the paths of the manifests written.
 
-    From source, a small launcher script starts `python -m plume native`. From a packaged
-    single-file build (`binary`), the binary is copied to a stable place and registered directly:
-    Chrome starts it with the extension origin as argument, which it recognises as native mode.
+    Run from source, the host is a small launcher script that starts `python -m plume native`.
+    Run from a packaged build (`binary`), the program itself is copied to a fixed location and
+    registered. Chrome starts it with the extension's origin as an argument, and the program
+    takes that as the cue to run in native mode.
 
-    A PyInstaller one-directory build (a folder holding the program and `_internal/`) is copied whole.
-    That matters on macOS: files a program extracts at run time while started by Chrome get the
-    quarantine flag and trigger a Gatekeeper prompt on every launch, so nothing may be unpacked then.
+    A PyInstaller one-directory build (a folder holding the program and `_internal/`) is copied
+    as a whole. This matters on macOS: files unpacked at run time by a process that Chrome started
+    get the quarantine flag, and Gatekeeper then prompts on every launch. Nothing may be unpacked
+    at run time.
     """
     binary = binary or _frozen_binary()
     home = home or os.path.expanduser("~")
@@ -72,13 +74,13 @@ def install_host(home=None, python=None, server_dir=None, browsers=None, system=
     if binary:
         binary = os.path.abspath(binary)
         src_dir = os.path.dirname(binary)
-        if os.path.isdir(os.path.join(src_dir, "_internal")):  # one-directory build
+        if os.path.isdir(os.path.join(src_dir, "_internal")):  # a one-directory build
             app_dir = os.path.join(install_dir, "app")
             if src_dir != os.path.abspath(app_dir):
                 shutil.rmtree(app_dir, ignore_errors=True)
                 shutil.copytree(src_dir, app_dir, symlinks=True)
             launcher, cleanup = os.path.join(app_dir, os.path.basename(binary)), app_dir
-            old = os.path.join(install_dir, "plume")  # a single-file install from an earlier version
+            old = os.path.join(install_dir, "plume")  # left over from an earlier single-file install
             if os.path.isfile(old):
                 os.remove(old)
         else:  # single file

@@ -1,5 +1,6 @@
-// A short log of recent sends, kept only in this browser (chrome.storage.local). It holds recipients,
-// subject and the outcome, never the message text, so a missed notification can be checked later.
+// A short log of recent sends, kept in this browser only (chrome.storage.local). It stores
+// recipients, subject and outcome, but never the message text, so a missed notification can
+// still be checked later.
 (function (root) {
   const P = (root.Plume = root.Plume || {});
   const MAX = 50;
@@ -19,7 +20,7 @@
     };
   }
 
-  // Newest first, capped.
+  // Newest first, capped at max entries.
   async function append(storage, entry, max = MAX) {
     const list = await load(storage);
     list.unshift(entry);

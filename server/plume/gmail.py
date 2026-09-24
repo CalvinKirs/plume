@@ -8,9 +8,9 @@ API = "https://gmail.googleapis.com/gmail/v1/users/me"
 
 
 class GmailArchive:
-    """Files a sent copy into Gmail with users.messages.insert (label SENT).
+    """Files a copy of a sent message under Gmail's Sent label with users.messages.insert.
 
-    insert only stores the message; it never sends anything.
+    Insert only stores a message. It never sends anything.
     """
 
     def __init__(self, tokens, transport, api=API):
@@ -22,7 +22,7 @@ class GmailArchive:
             body["threadId"] = thread_id
         payload = json.dumps(body).encode()
         status, data = self._post(payload, force_refresh=False)
-        if status == 401:  # access token revoked or expired early: refresh once and retry
+        if status == 401:  # The token may have been revoked or expired early: refresh once and retry.
             status, data = self._post(payload, force_refresh=True)
         if status != 200:
             raise ArchiveError(f"gmail insert failed with HTTP {status}")

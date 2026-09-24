@@ -1,9 +1,9 @@
 #!/bin/sh
-# Build the `plume` program for the platform this runs on and pack it: dist/<name>.tar.gz
+# Builds the `plume` program for the current platform and packs it into dist/<name>.tar.gz.
 # Usage: packaging/build.sh [name]      (default name: plume-<os>-<arch>)
 #
-# One-directory build on purpose: a one-file build unpacks itself into a new temp folder on every
-# launch, and on macOS that makes Gatekeeper prompt each time Chrome starts the native host.
+# This is a one-directory build on purpose. A one-file build unpacks itself into a new temp folder
+# on every launch, and on macOS that makes Gatekeeper prompt each time Chrome starts the native host.
 set -eu
 cd "$(dirname "$0")/.."
 name="${1:-plume-$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m)}"

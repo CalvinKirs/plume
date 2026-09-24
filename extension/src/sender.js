@@ -1,7 +1,7 @@
 (function (root) {
   const P = (root.Plume = root.Plume || {});
   const HOST = 'org.plume.host';
-  const NATIVE_TIMEOUT_MS = 90000; // longer than the host's own SMTP timeouts
+  const NATIVE_TIMEOUT_MS = 90000; // Longer than the host's own SMTP timeouts.
 
   function buildPayload(draft, ctx, settings) {
     const payload = {
@@ -23,7 +23,7 @@
     relayResponse: data.relayResponse || null, relaySeconds: data.relaySeconds == null ? null : data.relaySeconds,
   });
 
-  // Default: Chrome launches the local Plume host on demand (native messaging).
+  // Default transport: Chrome starts the local Plume host when it is needed (native messaging).
   async function viaNative(payload, runtime, timeoutMs) {
     let data, timer;
     const silence = new Promise((_, reject) => {
@@ -48,7 +48,8 @@
     return data.ok ? done(data, payload) : fail(data.error || 'Plume host reported an error');
   }
 
-  // Advanced: talk to `python3 -m plume serve` over localhost HTTP (debugging, no host install).
+  // Optional transport for debugging: talk to `python3 -m plume serve` over localhost HTTP.
+  // No host installation is needed.
   async function viaHttp(payload, settings, fetchFn) {
     if (!settings.token) return fail('HTTP mode needs the token in the Plume options.');
     let res;
@@ -66,7 +67,8 @@
     return res.ok ? done(data, payload) : fail(data.error || `Plume server answered HTTP ${res.status}`);
   }
 
-  // deps = { runtime, fetch }. Returns {ok, ...}; never throws, so the caller only shows the outcome.
+  // deps is { runtime, fetch }. Always resolves to {ok, ...} and never throws, so the caller only
+  // has to show the outcome.
   async function sendDraft({ draft, ctx }, settings, deps) {
     if (!settings.from) return fail('Open the Plume options and set your @apache.org address.');
     const payload = buildPayload(draft, ctx, settings);

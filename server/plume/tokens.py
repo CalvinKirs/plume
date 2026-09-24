@@ -28,7 +28,7 @@ class FileTokenStore:
 
 
 class TokenProvider:
-    """Hands out a valid access token, refreshing and persisting as needed."""
+    """Hands out a valid access token, refreshing and saving it when needed."""
 
     def __init__(self, oauth, store, now=time.time, skew=60):
         self.oauth, self.store, self.now, self.skew = oauth, store, now, skew

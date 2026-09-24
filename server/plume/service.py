@@ -20,7 +20,10 @@ class SendResult:
 
 
 def with_bcc(msg, recipients):
-    """Copy of msg with a Bcc header for the envelope-only recipients (for the sender's own record)."""
+    """Return a copy of msg with a Bcc header for the recipients that are not visible in To or Cc.
+
+    The copy is for the sender's own record.
+    """
     visible = {a.lower() for _, a in getaddresses(msg.get_all("To", []) + msg.get_all("Cc", []))}
     hidden = [r for r in recipients if r.lower() not in visible]
     out = copy.deepcopy(msg)
@@ -30,10 +33,10 @@ def with_bcc(msg, recipients):
 
 
 class SendService:
-    """Send through the mailer, then best-effort archive a copy.
+    """Send through the mailer, then try to archive a copy.
 
-    A mailer failure propagates (nothing was sent). An archive failure never does:
-    the message is already out, so it is reported in the result instead.
+    If the mailer fails, the exception propagates because nothing was sent. If archiving fails,
+    the mail is already out, so the failure is reported in the result instead.
     """
 
     def __init__(self, mailer, archive=None):
@@ -50,7 +53,7 @@ class SendService:
         try:
             result.archive_id = self.archive.archive(with_bcc(msg, recipients), thread_id)
             result.archived = True
-        except Exception as e:  # deliberately broad: the mail is already sent
+        except Exception as e:  # Deliberately broad. The mail is already out, so nothing here may turn into a failure.
             log.warning("sent but not archived: %s", e)
             result.archive_error = str(e)
         return result

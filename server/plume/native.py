@@ -1,4 +1,4 @@
-"""Chrome native messaging: length-prefixed JSON on stdin/stdout, one reply per request."""
+"""Chrome native messaging: length-prefixed JSON on stdin and stdout, one reply per request."""
 import json
 import logging
 import struct
@@ -9,11 +9,11 @@ log = logging.getLogger("plume.native")
 
 
 def read_message(stream):
-    """Next message, or None at end of input. Raises ValueError for undecodable JSON."""
+    """Return the next message, or None at end of input. Raises ValueError if the JSON cannot be decoded."""
     header = stream.read(4)
     if len(header) < 4:
         return None
-    (size,) = struct.unpack("=I", header)  # native byte order, as Chrome uses
+    (size,) = struct.unpack("=I", header)  # Chrome uses the machine's native byte order.
     data = stream.read(size)
     if len(data) < size:
         return None
@@ -41,7 +41,7 @@ def serve(service, stdin, stdout):
             continue
         try:
             reply = send_payload(service, msg.get("payload"))[1]
-        except Exception as e:  # anything unexpected must reach the extension, not kill the host silently
+        except Exception as e:  # Report anything unexpected to the extension instead of dying silently.
             log.exception("unexpected failure while sending")
             reply = {"ok": False, "error": f"internal error: {type(e).__name__}: {e}"}
         write_message(stdout, reply)

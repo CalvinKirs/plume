@@ -7,7 +7,7 @@
     </mask>
   </defs>
   <rect width="128" height="128" rx="28" fill="#111827"/>
-  <!-- An original quill: asymmetric vane with stepped barbs, a split shaft and a bare tip. -->
+  <!-- An original quill: an asymmetric vane with stepped barbs, a split shaft and a bare tip. -->
   <g transform="translate(66 60) rotate(38) scale(.98)">
     <g mask="url(#cut)"><path fill="url(#f)" d="M0 -60 C-18 -42 -28 -8 -15 26 C-11 34 -7 38 -4 41 C6 36 10 30 10 21 L23 23 C25 12 19 8 15 0 L29 -2 C28 -14 20 -18 14 -24 L27 -30 C22 -44 12 -54 0 -60 Z"/></g>
     <path d="M-4 38 L-8 68" stroke="#a5b4fc" stroke-width="4.5" stroke-linecap="round"/>

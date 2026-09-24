@@ -1,5 +1,5 @@
-// Turn Gmail's compose HTML into plain text. Quoted replies become "> " prefixed lines,
-// which is what mailing lists (and PonyMail) expect.
+// Converts Gmail's compose HTML to plain text. Quoted replies become lines that start with "> ",
+// which is what mailing lists and PonyMail expect.
 (function (root) {
   const P = (root.Plume = root.Plume || {});
   const BLOCK = new Set(['DIV', 'P', 'LI', 'UL', 'OL', 'TABLE', 'TR', 'PRE', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6']);

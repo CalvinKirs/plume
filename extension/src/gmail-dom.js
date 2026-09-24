@@ -1,17 +1,17 @@
-// Every Gmail-specific selector lives in this file. When Gmail changes its markup,
-// this is the only place to touch (see docs/selectors.md).
+// All Gmail-specific selectors live in this file. When Gmail changes its markup, this is the
+// only place that needs to change (see docs/selectors.md).
 (function (root) {
   const P = (root.Plume = root.Plume || {});
 
-  // Class .aoO is Gmail's send button and does not depend on the UI language;
-  // the label matches cover English and Chinese UIs.
+  // The class .aoO marks Gmail's Send button and does not depend on the interface language.
+  // The label matches cover the English and Chinese interfaces.
   const SEND = [
     '.aoO[role="button"]',
     '[role="button"][data-tooltip^="Send"]', '[role="button"][aria-label^="Send"]',
     '[role="button"][data-tooltip^="\u53d1\u9001"]', '[role="button"][aria-label^="\u53d1\u9001"]',
   ].join(',');
   const BODY = 'div[role="textbox"][g_editable="true"], div[role="textbox"][aria-label="Message Body"]';
-  // Gmail also keeps a hidden textarea copy of the body (and plain-text mode uses a textarea).
+  // Gmail keeps a hidden textarea copy of the body, and plain-text mode uses a textarea as the editor.
   const BODY_TEXTAREA = 'textarea[aria-label="Message Body"], textarea[name="body"]';
   const SUBJECT = 'input[name="subjectbox"]';
   const DISCARD = [
@@ -41,9 +41,9 @@
 
   const MAX_WIDEN = 12;
 
-  // A compose starts at the smallest ancestor of a message body that also holds a send button,
-  // then widens while the parent still holds only this one body: the recipient and subject rows
-  // are often siblings of that smallest ancestor, not inside it.
+  // A compose window starts as the smallest ancestor of a message body that also contains a Send
+  // button. It is then widened as long as the parent contains only this one body, because the
+  // recipient and subject rows are often siblings of that ancestor rather than inside it.
   function findComposeWindows(scope) {
     const composes = [];
     scope.querySelectorAll(BODY).forEach((body) => {
@@ -64,7 +64,7 @@
   const findBody = (c) => c.querySelector(BODY);
   const bodyCandidates = (c) => c.querySelectorAll(BODY).length + c.querySelectorAll(BODY_TEXTAREA).length;
 
-  // First editor that actually holds text: rich editors first, textarea copies as a fallback.
+  // Rich editors come first. A textarea copy is only a fallback, used when no editor has any text.
   function readBodyText(compose) {
     for (const el of compose.querySelectorAll(BODY)) {
       const text = P.domToText(el);
@@ -89,7 +89,7 @@
     };
   }
 
-  // Where our button goes: right after the send button's toolbar cell.
+  // The button goes right after the toolbar cell that holds the Send button.
   function buttonAnchor(compose) {
     const send = findSendButton(compose);
     return send ? send.closest('td') || send.parentElement : null;

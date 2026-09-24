@@ -1,4 +1,4 @@
-"""Transport-independent send operation shared by the HTTP and native-messaging entry points."""
+"""The send operation shared by the HTTP and native messaging entry points."""
 import smtplib
 
 from .errors import ConfigError
@@ -6,7 +6,7 @@ from .message import BadMessage, build_message
 
 
 def send_payload(service, payload):
-    """Run one send; return (http_status, body). Never raises for expected failures."""
+    """Send one message and return (http_status, body). Expected failures go into the body instead of being raised."""
     try:
         if not isinstance(payload, dict):
             raise BadMessage("payload must be an object")
