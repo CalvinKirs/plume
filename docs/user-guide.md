@@ -29,7 +29,7 @@ It uses `curl` on purpose. macOS marks files downloaded in a browser as quaranti
 refuses to run a program that Apple has not signed. If you download an archive from the releases page in a
 browser instead, run `xattr -dr com.apple.quarantine plume` on the extracted folder before its `setup`.
 The installer takes the newest release, pre-releases included. To pick a specific one, set
-`PLUME_VERSION`, for example `PLUME_VERSION=v0.1.0-alpha.1`.
+`PLUME_VERSION`, for example `PLUME_VERSION=v0.1.0-alpha.2`.
 
 The Linux build needs glibc 2.31 or newer, which means Debian 11, Ubuntu 20.04, RHEL 9 or anything more
 recent. `plume --version` shows which version you have.
@@ -130,6 +130,10 @@ your `PATH`. Errors inside the program are logged to `~/.config/plume/host.log`.
 - "relay rejected the login": the ASF user name or password is wrong. Run `plume configure`.
 - "relay failure: ...": a network problem, or the relay refused the message. The text after the colon says
   which.
+- "certificate verify failed": Plume could not find the certificates it needs to check the relay's identity.
+  Run `plume check`. It shows how many trusted certificates Plume loaded and whether the relay's certificate
+  verifies. Programs from 0.1.0-alpha.2 on fall back to the system's certificate bundle, so if you see this on
+  an older one, update.
 - "Plume is not configured": run `plume setup`.
 
 ## Privacy and security
