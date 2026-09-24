@@ -60,7 +60,8 @@ The code is laid out as follows.
 - `extension/` is the Chrome extension (Manifest V3). All Gmail selectors are in `src/gmail-dom.js`; see
   [docs/selectors.md](docs/selectors.md).
 - `packaging/` holds the PyInstaller build and the one-line installer.
-- [docs/design.md](docs/design.md) explains how the pieces fit together and why they are built this way.
+- [docs/architecture.md](docs/architecture.md) shows how a message travels and who does what, including the
+  ASF mail relay that actually sends it. [docs/design.md](docs/design.md) explains why it is built this way.
 
 ## License
 

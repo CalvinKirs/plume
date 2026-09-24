@@ -20,18 +20,8 @@ Optionally the program also files a copy of the message under Gmail's Sent label
 
 ## Structure of the program
 
-The send logic sits behind small interfaces (ports), and each port has a fake in the tests.
-
-```
-app.py (HTTP, debugging) ┐
-native.py (Chrome host)  ┴-> api.send_payload -> service.SendService -> ports.Mailer      <- relay.SmtpRelayMailer
-                                                                       -> ports.SentArchive <- gmail.GmailArchive | archive.NullArchive
-gmail.GmailArchive -> tokens.TokenProvider -> oauth.GoogleOAuth, ports.TokenStore <- tokens.FileTokenStore
-                   -> ports.Transport <- transport.UrllibTransport
-```
-
-`wiring.py` builds this graph from the configuration, and `cli.py` exposes it as commands. Adding another
-kind of archive, such as IMAP APPEND, means implementing `SentArchive` and choosing it in `wiring.py`.
+See [architecture.md](architecture.md) for the components, the path of a message and the layout of the
+program's code.
 
 ## Decisions
 
