@@ -1,8 +1,8 @@
 import smtplib
-import ssl
 import time
 
 from .ports import RelayReceipt
+from .tls import default_context
 
 
 class _RecordsDataReply:
@@ -22,6 +22,20 @@ class _SMTP_SSL(_RecordsDataReply, smtplib.SMTP_SSL):
     pass
 
 
+def connect(host, port, ctx=None):
+    """Open an encrypted connection to the relay. Port 465 uses implicit TLS, other ports use STARTTLS."""
+    ctx = ctx or default_context()
+    if port == 465:
+        return _SMTP_SSL(host, port, context=ctx, timeout=30)
+    smtp = _SMTP(host, port, timeout=30)
+    try:
+        smtp.starttls(context=ctx)
+    except Exception:
+        smtp.close()
+        raise
+    return smtp
+
+
 class SmtpRelayMailer:
     """Submit through an authenticated SMTP relay. Port 465 uses implicit TLS, other ports use STARTTLS."""
 
@@ -30,14 +44,7 @@ class SmtpRelayMailer:
 
     def send(self, msg, recipients):
         started = time.monotonic()
-        ctx = ssl.create_default_context()
-        if self.port == 465:
-            smtp = _SMTP_SSL(self.host, self.port, context=ctx, timeout=30)
-        else:
-            smtp = _SMTP(self.host, self.port, timeout=30)
-        with smtp:
-            if self.port != 465:
-                smtp.starttls(context=ctx)
+        with connect(self.host, self.port) as smtp:
             smtp.login(self.user, self.password)
             smtp.send_message(msg, from_addr=msg["From"], to_addrs=recipients)
             code, response = getattr(smtp, "last_data_reply", (None, b""))
