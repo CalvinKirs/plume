@@ -14,17 +14,27 @@ Plume is an independent project. It is not affiliated with or endorsed by the Ap
 
 ## Status
 
-This is an early version. It has been used to send mail as `@apache.org` from Gmail on macOS (Apple
-silicon), including Cc and Bcc on new messages. Attachments and HTML formatting are not supported, so
-messages go out as plain text, and there is no Windows support yet. There is also no Chrome Web Store
-listing and no published release, so for now you load the extension from a checkout and build the program
-yourself. Inline replies, the box that opens inside a thread, still have rough edges around recipients and
-reply headers. Gmail's page markup is not a public API, so a Gmail update can break the button until the
-extension is adjusted.
+Plume is an alpha release (0.1.0-alpha.1). It has been used to send mail as `@apache.org` from Gmail on
+macOS (Apple silicon), for new messages and for replies written inline in a thread, with To, Cc and Bcc.
+The Linux build passes its tests but has had little real use. Attachments and HTML formatting are not
+supported, so messages go out as plain text, and there is no Windows support yet. The extension is not in
+the Chrome Web Store, so you load it by hand. Gmail's page markup is not a public API, so a Gmail update
+can break the button until the extension is adjusted. Expect some rough edges, and please report them.
 
 ## Getting started
 
-You need Python 3.11 or newer to build the program, and a Chromium-based browser.
+Install the program with one command. It downloads the latest release for macOS (Apple silicon) or Linux
+(x86_64), asks for your ASF user name and password, and registers the program with your browser:
+
+```
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/CalvinKirs/plume/main/packaging/install.sh)"
+```
+
+Then download `plume-extension.zip` from the [releases page](https://github.com/CalvinKirs/plume/releases)
+and unzip it. Open `chrome://extensions`, turn on Developer mode, choose Load unpacked and select the
+unzipped folder. Enter your `@apache.org` address in the extension's options and restart the browser.
+
+To build the program from source instead, you need Python 3.11 or newer:
 
 ```
 git clone https://github.com/CalvinKirs/plume.git
@@ -32,10 +42,6 @@ cd plume
 ./packaging/build.sh
 ./dist/plume/plume setup
 ```
-
-`setup` asks for your ASF user name and password and registers the program with your browser. Then open
-`chrome://extensions`, turn on Developer mode, choose Load unpacked and select the `extension` directory.
-Enter your `@apache.org` address in the extension's options and restart the browser.
 
 The [user guide](docs/user-guide.md) covers the rest, including troubleshooting and uninstalling.
 

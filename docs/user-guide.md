@@ -7,7 +7,7 @@ as" stops working for third-party addresses in January 2027
 it. Mail sent to you is not affected, because it still reaches Gmail through your ASF forwarding.
 
 Plume is an independent project. It is not affiliated with or endorsed by the Apache Software Foundation.
-[architecture.md](architecture.md) describes how it works.
+It is an alpha release, so expect rough edges. [architecture.md](architecture.md) describes how it works.
 
 ## What you need
 
@@ -17,7 +17,24 @@ Your network must allow connections to `mail-relay.apache.org` on port 587 or 46
 
 ## Installing the program
 
-For now you build the program yourself, which needs Python 3.11 or newer:
+The quickest way is the installer. It downloads the latest release for your system, asks for your ASF user
+name and password, copies the program to `~/.local/share/plume/app/` and registers it with every
+Chrome-based browser it finds:
+
+```
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/CalvinKirs/plume/main/packaging/install.sh)"
+```
+
+It uses `curl` on purpose. macOS marks files downloaded in a browser as quarantined, and Gatekeeper then
+refuses to run a program that Apple has not signed. If you download an archive from the releases page in a
+browser instead, run `xattr -dr com.apple.quarantine plume` on the extracted folder before its `setup`.
+The installer takes the newest release, pre-releases included. To pick a specific one, set
+`PLUME_VERSION`, for example `PLUME_VERSION=v0.1.0-alpha.1`.
+
+The Linux build needs glibc 2.31 or newer, which means Debian 11, Ubuntu 20.04, RHEL 9 or anything more
+recent. `plume --version` shows which version you have.
+
+You can also build the program yourself, which needs Python 3.11 or newer:
 
 ```
 git clone https://github.com/CalvinKirs/plume.git
@@ -26,27 +43,15 @@ cd plume
 ./dist/plume/plume setup
 ```
 
-`setup` asks for your ASF user name and password, copies the program to `~/.local/share/plume/app/` and
-registers it with every Chrome-based browser it finds.
-
-Once release builds are published, this one-liner will install the program without needing Python:
-
-```
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/CalvinKirs/plume/main/packaging/install.sh)"
-```
-
-It uses `curl` on purpose. macOS marks files downloaded in a browser as quarantined, and Gatekeeper then
-refuses to run a program that Apple has not signed. If you did download an archive in a browser, run
-`xattr -dr com.apple.quarantine plume` on the extracted folder before running `setup`.
-
 ## Installing the extension
 
-Plume is not in the Chrome Web Store yet, so you load it from the repository. Open `chrome://extensions`,
-turn on Developer mode, choose Load unpacked and select the `extension` directory. Then open the
-extension's Options, enter your `@apache.org` address and save. Finally, quit the browser completely
-(Cmd+Q on macOS) and start it again. That is only needed once, so that the browser notices the program you
-registered. After you update the extension later, press its Reload button on `chrome://extensions` and
-refresh the Gmail tab.
+Plume is not in the Chrome Web Store yet, so you load it by hand. Download `plume-extension.zip` from the
+[releases page](https://github.com/CalvinKirs/plume/releases) and unzip it. If you have a checkout of the
+repository, its `extension` directory works as well. Open `chrome://extensions`, turn on Developer mode,
+choose Load unpacked and select the folder. Then open the extension's Options, enter your `@apache.org`
+address and save. Finally, quit the browser completely (Cmd+Q on macOS) and start it again. That is only
+needed once, so that the browser notices the program you registered. After you update the extension, press
+its Reload button on `chrome://extensions` and refresh the Gmail tab.
 
 ## Sending mail
 
