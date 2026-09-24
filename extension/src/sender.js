@@ -8,6 +8,8 @@
       from: settings.from, to: draft.to, cc: draft.cc, bcc: draft.bcc,
       subject: draft.subject, text: draft.text,
     };
+    const name = (settings.fromName || '').trim();
+    if (name) payload.fromName = name;
     if (ctx) {
       payload.inReplyTo = ctx.inReplyTo;
       payload.references = ctx.references;
@@ -18,7 +20,7 @@
 
   const fail = (error) => ({ ok: false, error });
   const done = (data, payload) => ({
-    ok: true, from: payload.from, messageId: data.messageId || null,
+    ok: true, from: payload.fromName ? `${payload.fromName} <${payload.from}>` : payload.from, messageId: data.messageId || null,
     archived: !!data.archived, archiveError: data.archiveError || null,
     relayResponse: data.relayResponse || null, relaySeconds: data.relaySeconds == null ? null : data.relaySeconds,
   });

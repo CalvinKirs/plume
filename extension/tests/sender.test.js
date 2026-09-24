@@ -55,3 +55,13 @@ test('a host that never answers ends in a readable timeout, not a silent hang', 
   assert.strictEqual(r.ok, false);
   assert.match(r.error, /did not answer within/);
 });
+
+test('a display name is sent as fromName and shown with the address; a blank one is left out', async () => {
+  const withName = { ...settings, fromName: '  Calvin Kirs ' };
+  assert.strictEqual(buildPayload(draft, null, withName).fromName, 'Calvin Kirs');
+  for (const blank of ['', '   ', undefined]) {
+    assert.ok(!('fromName' in buildPayload(draft, null, { ...settings, fromName: blank })));
+  }
+  const r = await sendDraft({ draft }, withName, native(async () => ({ ok: true })));
+  assert.strictEqual(r.from, 'Calvin Kirs <me@apache.org>');
+});

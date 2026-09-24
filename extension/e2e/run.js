@@ -52,7 +52,14 @@ fs.writeFileSync(path.join(home, '.config', 'plume', 'config.json'),
     check('unconfigured address is reported', /options/.test(text), text);
     await page.evaluate(() => document.querySelectorAll('.plume-toast').forEach((e) => e.remove()));
 
-    await sw.evaluate(() => chrome.storage.local.set({ from: 'me@apache.org' }));
+    // Fill in the options page the way a user does.
+    const setup = await ctx.newPage();
+    await setup.goto('chrome-extension://mabkbpnhmakajgmgpcehigllechcaehb/src/options.html');
+    await setup.fill('#from', 'me@apache.org');
+    await setup.fill('#fromName', 'Calvin Kirs');
+    await setup.click('#save');
+    await setup.waitForFunction(() => document.getElementById('status').textContent === 'Saved');
+    await setup.close();
     await page.click('.plume-btn');
     toast = await page.waitForSelector('.plume-toast', { timeout: 15000 });
     text = await toast.textContent();
@@ -60,7 +67,7 @@ fs.writeFileSync(path.join(home, '.config', 'plume', 'config.json'),
     check('button is usable again after a failed send', await page.$eval('.plume-btn', (b) => !b.disabled));
 
     // Success path: answer the way the host does when the relay accepts the mail. The real relay is not reachable here.
-    await sw.evaluate(() => { chrome.runtime.sendNativeMessage = async () => { await new Promise((r) => setTimeout(r, 400)); return { ok: true, messageId: '<e2e@apache.org>', archived: false, relayResponse: '250 2.0.0 Ok: queued as E2E42', relaySeconds: 0.4 }; }; });
+    await sw.evaluate(() => { chrome.runtime.sendNativeMessage = async (host, message) => { globalThis.__lastPayload = message.payload; await new Promise((r) => setTimeout(r, 400)); return { ok: true, messageId: '<e2e@apache.org>', archived: false, relayResponse: '250 2.0.0 Ok: queued as E2E42', relaySeconds: 0.4 }; }; });
     await page.evaluate(() => document.querySelectorAll('.plume-toast').forEach((e) => e.remove()));
     let sawSending = false;
     const label = page.waitForFunction(() => document.querySelector('.plume-btn') && document.querySelector('.plume-btn').textContent === 'Sending…', null, { timeout: 3000 }).then(() => { sawSending = true; }).catch(() => {});
@@ -70,7 +77,7 @@ fs.writeFileSync(path.join(home, '.config', 'plume', 'config.json'),
     const warnText = await warn.textContent();
     await label;
     check('a reply that could not be threaded is sent with an amber warning',
-      /✓ Sent as me@apache.org/.test(warnText) && /Not threaded for list readers/.test(warnText), JSON.stringify(warnText));
+      /✓ Sent as Calvin Kirs <me@apache.org>/.test(warnText) && /Not threaded for list readers/.test(warnText), JSON.stringify(warnText));
     check('the button shows Sending… while working', sawSending);
     check('the button gets its label back afterwards', (await page.$eval('.plume-btn', (b) => b.textContent)) === 'Send as apache.org');
     await page.evaluate(() => document.querySelectorAll('.plume-toast').forEach((e) => e.remove()));
@@ -80,7 +87,9 @@ fs.writeFileSync(path.join(home, '.config', 'plume', 'config.json'),
     const ok = await page.waitForSelector('.plume-toast-success', { timeout: 10000 });
     const okText = await ok.textContent();
     check('success is a prominent green notification naming the sender, recipients and relay',
-      /✓ Sent as me@apache.org/.test(okText) && /To: dev@apache.org, bob@example.org/.test(okText) && /Cc: carol@example.org/.test(okText) && /Accepted by the ASF mail relay in 0.4 s/.test(okText) && /Relay reply: 250 2.0.0 Ok: queued as E2E42/.test(okText), JSON.stringify(okText));
+      /✓ Sent as Calvin Kirs <me@apache.org>/.test(okText) && /To: dev@apache.org, bob@example.org/.test(okText) && /Cc: carol@example.org/.test(okText) && /Accepted by the ASF mail relay in 0.4 s/.test(okText) && /Relay reply: 250 2.0.0 Ok: queued as E2E42/.test(okText), JSON.stringify(okText));
+    const sent = await sw.evaluate(() => globalThis.__lastPayload);
+    check('the display name reaches the host next to the address', sent.from === 'me@apache.org' && sent.fromName === 'Calvin Kirs', JSON.stringify([sent.from, sent.fromName]));
     await page.click('.plume-toast-success'); // click dismisses
     check('a notification is dismissed by clicking it', (await page.$$('.plume-toast-success')).length === 0);
 
