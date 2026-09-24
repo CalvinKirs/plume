@@ -69,3 +69,26 @@ test('body: the first editor with text wins, textarea copies are a fallback, emp
   const empty = page('<div id="c"><div role="textbox" g_editable="true"><div><br></div></div><textarea aria-label="Message Body"></textarea></div>').getElementById('c');
   assert.strictEqual(gmail.readBodyText(empty), '');
 });
+
+// jsdom has no layout, so visibility is decided by an attribute in these tests.
+const shown = (el) => !el.hasAttribute('data-hidden');
+
+test('body fallback: the visible editor nearest the button is read, hidden decoys are skipped', () => {
+  const doc = page(`
+    <div id="a"><div role="textbox" g_editable="true" data-hidden="1">decoy</div></div>
+    <div id="b"><div role="textbox" g_editable="true"><div>real text</div></div><div role="button" id="send" class="aoO">Send</div></div>`);
+  assert.strictEqual(gmail.readBodyNear(doc.getElementById('send'), shown), 'real text');
+});
+
+test('body fallback: an empty compose does not pick up the text of another open draft', () => {
+  const doc = page(`
+    <div id="a"><div role="textbox" g_editable="true"><div>other draft</div></div></div>
+    <div id="b"><div role="textbox" g_editable="true"><div><br></div></div><div role="button" id="send" class="aoO">Send</div></div>`);
+  assert.strictEqual(gmail.readBodyNear(doc.getElementById('send'), shown), '');
+});
+
+test('body fallback: no visible editor gives an empty string, and the editors are described', () => {
+  const doc = page('<div role="textbox" g_editable="true" data-hidden="1">x</div><div role="button" id="send" class="aoO"></div>');
+  assert.strictEqual(gmail.readBodyNear(doc.getElementById('send'), shown), '');
+  assert.match(gmail.describeEditors(doc, shown), /1 editor\(s\) on the page, 0 visible, text length of each: hidden 1/);
+});

@@ -46,9 +46,12 @@
         return notify('error', 'Plume: nothing sent, no recipients found',
           'Add at least one recipient. In an inline reply, click the recipient line to expand it. (Or Gmail\'s layout changed.)');
       }
+      if (!draft.text.trim()) draft.text = gmail.readBodyNear(button);
       if (!draft.text.trim()) {
+        const found = gmail.describeEditors(document);
+        console.warn('[Plume] no message text found:', found);
         return notify('error', 'Plume: nothing sent, the message body reads as empty',
-          `${gmail.bodyCandidates(compose)} editor(s) found. Type some text. (Or Gmail's layout changed.)`);
+          `${found}. Type some text. (Or Gmail's layout changed.)`);
       }
       // Matches "Re:" in English and the Chinese equivalents (\u56de\u590d and \u7b54\u590d, both meaning
       // "reply"), followed by an ASCII colon or the full-width one (\uff1a).

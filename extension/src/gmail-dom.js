@@ -90,12 +90,51 @@
     };
   }
 
+  const isShown = (el) => el.getClientRects().length > 0;
+
+  // Number of ancestors that a and b share, counted from the document root down.
+  function sharedDepth(a, b) {
+    const ancestors = [];
+    for (let n = a; n; n = n.parentNode) ancestors.push(n);
+    for (let n = b; n; n = n.parentNode) {
+      const i = ancestors.indexOf(n);
+      if (i >= 0) return ancestors.length - i;
+    }
+    return 0;
+  }
+
+  // Fallback for a compose root that holds no text: the text of the visible editor closest to the
+  // button in the document tree. The closest editor is used even when it is empty, so that an
+  // empty compose never sends the text of another draft that happens to be open.
+  function readBodyNear(button, isVisible = isShown) {
+    let best = null;
+    let bestDepth = -1;
+    for (const el of button.ownerDocument.querySelectorAll(BODY)) {
+      if (!isVisible(el)) continue;
+      const depth = sharedDepth(button, el);
+      if (depth > bestDepth) {
+        best = el;
+        bestDepth = depth;
+      }
+    }
+    if (!best) return '';
+    return P.domToText(best) || (best.innerText || '').trim();
+  }
+
+  // A short description of the editors on the page, for the message shown when no text was found.
+  function describeEditors(doc, isVisible = isShown) {
+    const editors = [...doc.querySelectorAll(BODY)];
+    const shown = editors.filter(isVisible);
+    const lengths = editors.map((el) => (isVisible(el) ? '' : 'hidden ') + P.domToText(el).length);
+    return `${editors.length} editor(s) on the page, ${shown.length} visible, text length of each: ${lengths.join(', ') || 'none'}`;
+  }
+
   // The button goes right after the toolbar cell that holds the Send button.
   function buttonAnchor(compose) {
     const send = findSendButton(compose);
     return send ? send.closest('td') || send.parentElement : null;
   }
 
-  P.gmail = { findComposeWindows, findBody, bodyCandidates, readBodyText, findSendButton, findDiscardButton, readDraft, buttonAnchor, recipients };
+  P.gmail = { findComposeWindows, findBody, bodyCandidates, readBodyText, readBodyNear, describeEditors, findSendButton, findDiscardButton, readDraft, buttonAnchor, recipients };
   if (typeof module !== 'undefined') module.exports = P.gmail;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
