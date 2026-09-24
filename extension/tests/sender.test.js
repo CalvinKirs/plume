@@ -14,9 +14,9 @@ test('payload carries reply headers and thread id only for replies', () => {
 
 test('native: sends the payload to the org.plume.host host', async () => {
   let call;
-  const deps = native(async (host, msg) => ((call = { host, msg }), { ok: true, archived: true, messageId: '<m1@apache.org>' }));
+  const deps = native(async (host, msg) => ((call = { host, msg }), { ok: true, archived: true, messageId: '<m1@apache.org>', relayResponse: '250 2.0.0 Ok: queued as 4ABC', relaySeconds: 0.7 }));
   const r = await sendDraft({ draft, ctx: null }, settings, deps);
-  assert.deepStrictEqual(r, { ok: true, from: 'me@apache.org', messageId: '<m1@apache.org>', archived: true, archiveError: null });
+  assert.deepStrictEqual(r, { ok: true, from: 'me@apache.org', messageId: '<m1@apache.org>', archived: true, archiveError: null, relayResponse: '250 2.0.0 Ok: queued as 4ABC', relaySeconds: 0.7 });
   assert.strictEqual(call.host, 'org.plume.host');
   assert.strictEqual(call.msg.type, 'send');
   assert.strictEqual(call.msg.payload.from, 'me@apache.org');
@@ -40,7 +40,7 @@ test('http mode still works and needs a token', async () => {
   const http = { ...settings, mode: 'http', token: 't0k' };
   let call;
   const fetchFn = async (url, init) => ((call = { url, init }), { ok: true, json: async () => ({ archived: false }) });
-  assert.deepStrictEqual(await sendDraft({ draft }, http, { fetch: fetchFn }), { ok: true, from: 'me@apache.org', messageId: null, archived: false, archiveError: null });
+  assert.deepStrictEqual(await sendDraft({ draft }, http, { fetch: fetchFn }), { ok: true, from: 'me@apache.org', messageId: null, archived: false, archiveError: null, relayResponse: null, relaySeconds: null });
   assert.strictEqual(call.url, 'http://127.0.0.1:8765/send');
   assert.strictEqual(call.init.headers.Authorization, 'Bearer t0k');
   assert.match((await sendDraft({ draft }, { ...http, token: '' }, { fetch: fetchFn })).error, /token/);

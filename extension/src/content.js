@@ -64,7 +64,8 @@
       const lines = [`To: ${list(draft.to)}`];
       if (draft.cc.length) lines.push(`Cc: ${list(draft.cc)}`);
       if (draft.bcc.length) lines.push(`Bcc: ${list(draft.bcc)}`);
-      lines.push('Accepted by the ASF mail relay.');
+      lines.push('Accepted by the ASF mail relay' + (res.relaySeconds == null ? '.' : ` in ${res.relaySeconds} s.`));
+      if (res.relayResponse) lines.push(`Relay reply: ${res.relayResponse}`);
       const problems = [];
       if (isReply && !ctx) problems.push(`Not threaded for list readers: reply headers unavailable (${found.reason}).`);
       if (!res.archived) {

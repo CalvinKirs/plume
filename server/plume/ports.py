@@ -1,9 +1,18 @@
 """Interfaces (ports) the service depends on. Adapters live in their own modules."""
+from dataclasses import dataclass
 from typing import Optional, Protocol, Tuple
 
 
+@dataclass
+class RelayReceipt:
+    """What the relay said when it took the message: its final reply (with the queue id) and how long that took."""
+
+    response: str
+    seconds: float
+
+
 class Mailer(Protocol):
-    def send(self, msg, recipients) -> None:
+    def send(self, msg, recipients) -> Optional[RelayReceipt]:
         """Submit msg to the outbound relay. Raises on failure."""
 
 

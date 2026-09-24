@@ -24,4 +24,5 @@ def send_payload(service, payload):
     return 200, {
         "ok": True, "messageId": result.message_id, "archived": result.archived,
         "archiveId": result.archive_id, "archiveError": result.archive_error,
+        "relayResponse": result.relay_response, "relaySeconds": result.relay_seconds,
     }

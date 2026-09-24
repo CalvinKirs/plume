@@ -59,7 +59,7 @@ fs.writeFileSync(path.join(home, '.config', 'plume', 'config.json'),
     check('button is usable again after a failed send', await page.$eval('.plume-btn', (b) => !b.disabled));
 
     // Success path: answer as the host would when the relay accepted the mail (the real relay is not reachable here).
-    await sw.evaluate(() => { chrome.runtime.sendNativeMessage = async () => { await new Promise((r) => setTimeout(r, 400)); return { ok: true, messageId: '<e2e@apache.org>', archived: false }; }; });
+    await sw.evaluate(() => { chrome.runtime.sendNativeMessage = async () => { await new Promise((r) => setTimeout(r, 400)); return { ok: true, messageId: '<e2e@apache.org>', archived: false, relayResponse: '250 2.0.0 Ok: queued as E2E42', relaySeconds: 0.4 }; }; });
     await page.evaluate(() => document.querySelectorAll('.plume-toast').forEach((e) => e.remove()));
     let sawSending = false;
     const label = page.waitForFunction(() => document.querySelector('.plume-btn') && document.querySelector('.plume-btn').textContent === 'Sending…', null, { timeout: 3000 }).then(() => { sawSending = true; }).catch(() => {});
@@ -79,7 +79,7 @@ fs.writeFileSync(path.join(home, '.config', 'plume', 'config.json'),
     const ok = await page.waitForSelector('.plume-toast-success', { timeout: 10000 });
     const okText = await ok.textContent();
     check('success is a prominent green notification naming the sender, recipients and relay',
-      /✓ Sent as me@apache.org/.test(okText) && /To: dev@apache.org, bob@example.org/.test(okText) && /Cc: carol@example.org/.test(okText) && /Accepted by the ASF mail relay/.test(okText), JSON.stringify(okText));
+      /✓ Sent as me@apache.org/.test(okText) && /To: dev@apache.org, bob@example.org/.test(okText) && /Cc: carol@example.org/.test(okText) && /Accepted by the ASF mail relay in 0.4 s/.test(okText) && /Relay reply: 250 2.0.0 Ok: queued as E2E42/.test(okText), JSON.stringify(okText));
     await page.click('.plume-toast-success'); // click dismisses
     check('a notification is dismissed by clicking it', (await page.$$('.plume-toast-success')).length === 0);
 

@@ -8,6 +8,7 @@ from http.server import ThreadingHTTPServer
 
 from plume.app import make_handler
 from plume.config import Config
+from plume.ports import RelayReceipt
 from plume.service import SendService
 
 from test_message import payload
@@ -21,6 +22,7 @@ class FakeMailer:
         if self.error:
             raise self.error
         self.sent.append((msg, recipients))
+        return RelayReceipt(response="250 queued as Q1", seconds=0.5)
 
 
 class FakeArchive:
@@ -64,6 +66,7 @@ class HttpTests(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertTrue(body["archived"])
         self.assertEqual(body["archiveId"], "gm-1")
+        self.assertEqual((body["relayResponse"], body["relaySeconds"]), ("250 queued as Q1", 0.5))
         self.assertEqual(len(self.mailer.sent), 1)
         self.assertEqual(self.archive.stored[0][1], "t9")
 

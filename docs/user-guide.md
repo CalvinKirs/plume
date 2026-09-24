@@ -116,6 +116,20 @@ In the commands below, `plume` stands for the installed program, `~/.local/share
 
 Errors inside the program are logged to `~/.config/plume/host.log`.
 
+## A message arrives late
+
+When Plume says **Sent**, the ASF mail relay has accepted the message, and the notification shows the relay's own
+reply (`Relay reply: 250 ... queued as <id>`) and how long the hand-over took. What happens afterwards (relay queue,
+the recipient's mail server, spam filtering, list moderation) is outside Plume. To find out where the time went:
+
+1. **Look at the hand-over time** in the notification. A few seconds or more means the relay or your network was slow.
+   Trying port 465 instead of 587 sometimes helps: set `"smtp_port": 465` in `~/.config/plume/config.json`.
+2. **If it was accepted quickly, follow the message.** Open the late message in Gmail, choose the three dots and
+   **Show original**, and read the `Received:` lines from the bottom (oldest) to the top. Compare their timestamps with the
+   `Date:` line: a big gap between two lines is where the message waited. The queue id from the relay reply lets ASF
+   Infrastructure find it in their logs.
+3. **Mailing lists** may hold a post for a moderator when it comes from an address the list does not recognise as a subscriber.
+
 ## Security and privacy
 
 - Your LDAP password is kept in `~/.config/plume/config.json` with permission 0600 (readable only by you).

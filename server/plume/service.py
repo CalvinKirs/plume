@@ -15,6 +15,8 @@ class SendResult:
     archived: bool = False
     archive_id: Optional[str] = None
     archive_error: Optional[str] = None
+    relay_response: Optional[str] = None
+    relay_seconds: Optional[float] = None
 
 
 def with_bcc(msg, recipients):
@@ -39,8 +41,10 @@ class SendService:
         self.archive = archive or NullArchive()
 
     def send(self, msg, recipients, thread_id=None) -> SendResult:
-        self.mailer.send(msg, recipients)
+        receipt = self.mailer.send(msg, recipients)
         result = SendResult(message_id=msg["Message-ID"])
+        if receipt:
+            result.relay_response, result.relay_seconds = receipt.response, receipt.seconds
         if isinstance(self.archive, NullArchive):
             return result
         try:

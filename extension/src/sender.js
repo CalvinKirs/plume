@@ -20,6 +20,7 @@
   const done = (data, payload) => ({
     ok: true, from: payload.from, messageId: data.messageId || null,
     archived: !!data.archived, archiveError: data.archiveError || null,
+    relayResponse: data.relayResponse || null, relaySeconds: data.relaySeconds == null ? null : data.relaySeconds,
   });
 
   // Default: Chrome launches the local Plume host on demand (native messaging).

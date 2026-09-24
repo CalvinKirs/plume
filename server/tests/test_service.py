@@ -20,6 +20,15 @@ class ServiceTests(unittest.TestCase):
     def test_without_hidden_recipients_no_bcc(self):
         self.assertIsNone(with_bcc(sample(), ["d@x.org"])["Bcc"])
 
+    def test_relay_receipt_is_carried_into_the_result(self):
+        from plume.ports import RelayReceipt
+
+        class M:
+            def send(self, *a):
+                return RelayReceipt(response="250 queued as 1", seconds=0.8)
+        r = SendService(M()).send(sample(), ["d@x.org"])
+        self.assertEqual((r.relay_response, r.relay_seconds), ("250 queued as 1", 0.8))
+
     def test_null_archive_skips(self):
         class M:
             def send(self, *a):
