@@ -1,3 +1,4 @@
+from email.headerregistry import Address
 from email.message import EmailMessage
 from email.utils import formatdate, make_msgid, getaddresses
 
@@ -22,6 +23,9 @@ def build_message(payload):
     bcc = _addrs(payload.get("bcc"))
     if len(sender) != 1:
         raise BadMessage("exactly one from address is required")
+    name = payload.get("fromName") or ""
+    if not isinstance(name, str):
+        raise BadMessage("fromName must be text")
     if not (to or cc or bcc):
         raise BadMessage("at least one recipient is required")
     text = payload.get("text")
@@ -31,7 +35,8 @@ def build_message(payload):
 
     msg = EmailMessage()
     try:
-        msg["From"] = sender[0]
+        # Address takes care of quoting and of encoding non-ASCII names, and refuses a newline in the name.
+        msg["From"] = Address(display_name=name.strip(), addr_spec=sender[0])
         if to:
             msg["To"] = ", ".join(to)
         if cc:

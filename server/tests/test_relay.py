@@ -71,5 +71,17 @@ class RelayTests(unittest.TestCase):
         self.assertEqual(smtp.last_data_reply, (250, b"2.0.0 Ok: queued as XYZ"))
 
 
+class EnvelopeTests(unittest.TestCase):
+    def test_the_envelope_sender_is_the_bare_address_even_with_a_display_name(self):
+        FakeSmtp.instances = []
+        m = EmailMessage()
+        m["From"], m["To"], m["Subject"] = "Calvin Kirs <me@apache.org>", "you@example.org", "s"
+        m.set_content("hi")
+        with mock.patch.object(relay, "_SMTP", FakeSmtp):
+            SmtpRelayMailer("relay.example", 587, "u", "p").send(m, ["you@example.org"])
+        send = [c for c in FakeSmtp.instances[0].calls if c[0] == "send"][0]
+        self.assertEqual(send[1], "me@apache.org")
+
+
 if __name__ == "__main__":
     unittest.main()

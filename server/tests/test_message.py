@@ -30,5 +30,43 @@ class MessageTests(unittest.TestCase):
                 build_message(bad)
 
 
+class DisplayNameTests(unittest.TestCase):
+    def sender(self, **kw):
+        msg, _ = build_message(payload(**kw))
+        return msg
+
+    def test_a_name_shows_up_in_the_from_header_next_to_the_address(self):
+        msg = self.sender(fromName="Calvin Kirs")
+        (addr,) = msg["From"].addresses
+        self.assertEqual((addr.display_name, addr.addr_spec), ("Calvin Kirs", "alice@apache.org"))
+        self.assertIn(b"From: Calvin Kirs <alice@apache.org>", msg.as_bytes())
+
+    def test_without_a_name_the_header_is_the_bare_address_as_before(self):
+        for kw in ({}, {"fromName": ""}, {"fromName": "   "}, {"fromName": None}):
+            self.assertIn(b"From: alice@apache.org", self.sender(**kw).as_bytes(), kw)
+
+    def test_commas_and_quotes_in_a_name_are_quoted_and_survive_a_round_trip(self):
+        import email
+        from email import policy
+        raw = self.sender(fromName='Kirs, Calvin "CK"').as_bytes()
+        (addr,) = email.message_from_bytes(raw, policy=policy.default)["From"].addresses
+        self.assertEqual((addr.display_name, addr.addr_spec), ('Kirs, Calvin "CK"', "alice@apache.org"))
+
+    def test_a_non_ascii_name_is_encoded_for_the_wire_and_decoded_back(self):
+        import email
+        from email import policy
+        name = "Jos\u00e9 N\u00fa\u00f1ez"
+        raw = self.sender(fromName=name).as_bytes()
+        header = raw.split(b"\r\n\r\n")[0].split(b"\n\n")[0]
+        self.assertTrue(header.isascii(), "the header block must be plain ASCII")
+        (addr,) = email.message_from_bytes(raw, policy=policy.default)["From"].addresses
+        self.assertEqual(addr.display_name, name)
+
+    def test_a_newline_or_a_non_text_name_is_refused(self):
+        for bad in ("Calvin\r\nBcc: evil@x.org", "Calvin\nKirs", 42, ["a"]):
+            with self.assertRaises(BadMessage, msg=repr(bad)):
+                build_message(payload(fromName=bad))
+
+
 if __name__ == "__main__":
     unittest.main()

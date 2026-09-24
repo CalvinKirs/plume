@@ -46,7 +46,8 @@ class SmtpRelayMailer:
         started = time.monotonic()
         with connect(self.host, self.port) as smtp:
             smtp.login(self.user, self.password)
-            smtp.send_message(msg, from_addr=msg["From"], to_addrs=recipients)
+            # The envelope sender is the bare address, even when the From header carries a display name.
+            smtp.send_message(msg, from_addr=msg["From"].addresses[0].addr_spec, to_addrs=recipients)
             code, response = getattr(smtp, "last_data_reply", (None, b""))
         text = response.decode(errors="replace").strip() if isinstance(response, bytes) else str(response)
         return RelayReceipt(response=f"{code} {text}".strip(), seconds=round(time.monotonic() - started, 2))
