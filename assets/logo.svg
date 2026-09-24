@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-label="Plume">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2563eb"/>
+      <stop offset="1" stop-color="#0d9488"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="url(#bg)"/>
+  <!-- A slender feather drawn upright, then swung to point up and right:
+       vane, bare quill below it, and barbs sweeping toward the tip. -->
+  <g transform="translate(62 66) rotate(42) scale(0.94)">
+    <path fill="#ffffff" d="M0 -54 C 20 -38 25 -6 12 28 C 9 36 4 42 0 46 C -4 42 -9 34 -12 26 C -24 -6 -20 -38 0 -54 Z"/>
+    <path d="M0 -50 L0 66" stroke="#ffffff" stroke-width="5" stroke-linecap="round" fill="none"/>
+    <g stroke="#0e7490" stroke-width="3.2" stroke-linecap="round" fill="none">
+      <path d="M0 -26 L-13 -36"/><path d="M0 -26 L14 -36"/>
+      <path d="M0 -8 L-17 -19"/><path d="M0 -8 L18 -19"/>
+      <path d="M0 10 L-17 -1"/><path d="M0 10 L17 -1"/>
+      <path d="M0 27 L-11 17"/><path d="M0 27 L10 17"/>
+    </g>
+    <path d="M0 -50 L0 44" stroke="#0e7490" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+  </g>
+</svg>

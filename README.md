@@ -1,4 +1,6 @@
-# Plume
+<p align="center"><img src="assets/logo.svg" alt="Plume logo" width="96" height="96"></p>
+
+<h1 align="center">Plume</h1>
 
 Keep sending as your `@apache.org` address from Gmail.
 
