@@ -25,5 +25,28 @@ class ConfigFileTests(unittest.TestCase):
         self.assertEqual(load_config({}, path="/nonexistent.json").user, "")
 
 
+
+class PrivateFilesTests(unittest.TestCase):
+    def test_config_directory_and_log_are_private_even_if_the_directory_already_existed(self):
+        from unittest import mock
+        home = tempfile.mkdtemp()
+        os.makedirs(os.path.join(home, ".config", "plume"), mode=0o775)
+        os.chmod(os.path.join(home, ".config", "plume"), 0o775)
+        with mock.patch.dict(os.environ, {"HOME": home}):
+            from plume import cli
+            save_config({"user": "u", "password": "p"})
+            cli._host_log()
+        mode = lambda p: stat.S_IMODE(os.stat(os.path.join(home, ".config", "plume", *p)).st_mode)
+        self.assertEqual(stat.S_IMODE(os.stat(os.path.join(home, ".config", "plume")).st_mode), 0o700)
+        self.assertEqual((mode(["config.json"]), mode(["host.log"])), (0o600, 0o600))
+
+    def test_other_directories_keep_their_permissions(self):
+        from plume.config import ensure_private_dir
+        shared = tempfile.mkdtemp()
+        os.chmod(shared, 0o755)
+        ensure_private_dir(shared)
+        self.assertEqual(stat.S_IMODE(os.stat(shared).st_mode), 0o755)
+
+
 if __name__ == "__main__":
     unittest.main()

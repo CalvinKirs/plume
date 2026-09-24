@@ -2,6 +2,7 @@ import json
 import os
 import time
 
+from .config import ensure_private_dir
 from .errors import AuthError
 
 
@@ -19,7 +20,7 @@ class FileTokenStore:
             return None
 
     def save(self, token):
-        os.makedirs(os.path.dirname(self.path), exist_ok=True)
+        ensure_private_dir(os.path.dirname(self.path))
         tmp = self.path + ".tmp"
         fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
         with os.fdopen(fd, "w") as f:

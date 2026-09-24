@@ -6,7 +6,7 @@ import sys
 from http.server import ThreadingHTTPServer
 
 from .app import make_handler
-from .config import DEFAULT_CONFIG_PATH, load_config, save_config
+from .config import DEFAULT_CONFIG_PATH, ensure_private_dir, load_config, save_config
 from .install import BROWSERS, install_host
 from .native import serve as serve_native
 from .oauth import run_local_auth
@@ -30,7 +30,10 @@ def _host_log():
     """Log warnings and tracebacks to ~/.config/plume/host.log, because Chrome throws away a native host's stderr."""
     try:
         path = os.path.expanduser("~/.config/plume/host.log")
-        os.makedirs(os.path.dirname(path), exist_ok=True)
+        ensure_private_dir(os.path.dirname(path))
+        # The log can contain recipient addresses, so create it readable by the user only.
+        os.close(os.open(path, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600))
+        os.chmod(path, 0o600)
         logging.basicConfig(filename=path, level=logging.WARNING, format="%(asctime)s %(name)s %(message)s")
     except OSError:
         pass

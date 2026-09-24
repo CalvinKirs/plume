@@ -61,10 +61,21 @@ def load_config(env=None, path=None):
     return Config(**{k: v for k, v in values.items() if k in known})
 
 
+def ensure_private_dir(path):
+    """Create a directory that only the user can enter.
+
+    An existing directory is tightened only if it is Plume's own (~/.config/plume), so that a token
+    file placed in a shared directory does not change that directory's permissions.
+    """
+    os.makedirs(path, mode=0o700, exist_ok=True)
+    if os.path.basename(os.path.normpath(path)) == "plume":
+        os.chmod(path, 0o700)
+
+
 def save_config(values, path=DEFAULT_CONFIG_PATH):
     """Write the config file with mode 0600, since it holds the relay password."""
     path = os.path.expanduser(path)
-    os.makedirs(os.path.dirname(path), exist_ok=True)
+    ensure_private_dir(os.path.dirname(path))
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
     with os.fdopen(fd, "w") as f:
         json.dump(values, f, indent=2)
