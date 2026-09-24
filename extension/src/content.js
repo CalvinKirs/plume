@@ -121,16 +121,39 @@
     button.type = 'button';
     button.className = 'plume-btn';
     button.textContent = 'Send as apache.org';
-    button.addEventListener('click', (e) => {
-      const current = gmail.findComposeWindows(document).find((c) => c.contains(button)) || compose;
-      onClick(current, button, e.altKey);
-    });
     // In a toolbar row the button needs its own cell. Elsewhere a plain wrapper is enough.
     const host = document.createElement(anchor.tagName === 'TD' ? 'td' : 'span');
     host.className = 'plume-host';
     host.appendChild(button);
     anchor.insertAdjacentElement('afterend', host);
   }
+
+  // One listener for every Plume button instead of one per button. Gmail can show a copy of the
+  // toolbar (for example a floating one while a long draft is scrolled), and a copied button
+  // carries no event listeners of its own.
+  let lastFocused = null;
+  document.addEventListener('focusin', (e) => { lastFocused = e.target; }, true);
+
+  // The compose that a button belongs to: the one that contains it, or for a copied button the
+  // one being typed in, or the only one on the page.
+  function composeFor(button) {
+    const composes = gmail.findComposeWindows(document);
+    return composes.find((c) => c.contains(button))
+      || composes.find((c) => lastFocused && lastFocused.isConnected && c.contains(lastFocused))
+      || (composes.length === 1 ? composes[0] : null);
+  }
+
+  document.addEventListener('click', (e) => {
+    const button = e.target.closest && e.target.closest('.plume-btn');
+    if (!button) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const compose = composeFor(button);
+    if (!compose) {
+      return notify('error', 'Plume: NOT sent', 'Could not tell which draft this button belongs to. Click into the message first.');
+    }
+    onClick(compose, button, e.altKey);
+  }, true);
 
   const scan = () => gmail.findComposeWindows(document).forEach(decorate);
   let queued = false;

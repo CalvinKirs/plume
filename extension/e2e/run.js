@@ -95,6 +95,20 @@ fs.writeFileSync(path.join(home, '.config', 'plume', 'config.json'),
     check('the options page lists the recent sends with their outcome', rows.length >= 3 && /✓ sent/.test(rows[0]) && /queued as E2E42/.test(rows[0]) && rows.some((r) => /✗ not sent/.test(r)), rows[0]);
     await opts.close();
 
+    // Gmail can show a copy of the toolbar. A copied button has no listeners, and must still work.
+    await page.evaluate(() => {
+      const copy = document.querySelector('.plume-host').cloneNode(true);
+      const bar = document.createElement('div');
+      bar.id = 'floating-bar';
+      bar.appendChild(copy);
+      document.body.appendChild(bar);
+    });
+    await page.evaluate(() => document.querySelectorAll('.plume-toast').forEach((e) => e.remove()));
+    await page.click('#floating-bar .plume-btn', { modifiers: ['Alt'] });
+    const copied = await page.waitForSelector('.plume-toast-info', { timeout: 5000 });
+    check('a copied button (for example in a floating toolbar) still works', /To: dev@apache.org/.test(await copied.textContent()));
+    await page.evaluate(() => { document.getElementById('floating-bar').remove(); document.querySelectorAll('.plume-toast').forEach((e) => e.remove()); });
+
     // A second compose in the same container changes how far the first one's root is widened.
     // That must not put a second button next to the first compose's Send button.
     const second = composeHtml({ split: true, subject: 'other' });
