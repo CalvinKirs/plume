@@ -6,6 +6,7 @@ start the program. It runs on every platform and Python version the test suite r
 """
 import json
 import os
+import platform
 import shutil
 import struct
 import subprocess
@@ -14,6 +15,18 @@ import tempfile
 import unittest
 
 from sources import REAL_SOURCE
+
+# The real, per-platform locations: the point of this test is that the process writes to them.
+if platform.system() == "Darwin":
+    CHROME_PROFILE = "Library/Application Support/Google/Chrome"
+    FIREFOX_PROFILE = "Library/Application Support/Firefox"
+    CHROME_MANIFESTS = "Library/Application Support/Google/Chrome/NativeMessagingHosts"
+    FIREFOX_MANIFESTS = "Library/Application Support/Mozilla/NativeMessagingHosts"
+else:
+    CHROME_PROFILE = ".config/google-chrome"
+    FIREFOX_PROFILE = ".mozilla/firefox"
+    CHROME_MANIFESTS = ".config/google-chrome/NativeMessagingHosts"
+    FIREFOX_MANIFESTS = ".mozilla/native-messaging-hosts"
 
 GOOD = {"from": "a@apache.org", "to": ["b@x.org"], "subject": "s", "text": "t"}
 
@@ -36,8 +49,8 @@ def ask_host(launcher, home, argv, payload=GOOD):
 class SourceInstallTests(unittest.TestCase):
     def setUp(self):
         self.home = tempfile.mkdtemp(prefix="plume home ")  # a space, as in "Application Support"
-        os.makedirs(os.path.join(self.home, ".config", "google-chrome"))
-        os.makedirs(os.path.join(self.home, ".mozilla", "firefox"))
+        os.makedirs(os.path.join(self.home, *CHROME_PROFILE.split("/")))
+        os.makedirs(os.path.join(self.home, *FIREFOX_PROFILE.split("/")))
         os.makedirs(os.path.join(self.home, ".config", "plume"))
         with open(os.path.join(self.home, ".config", "plume", "config.json"), "w") as f:
             json.dump({"user": "u", "password": "p", "smtp_host": "127.0.0.1", "smtp_port": 1}, f)
@@ -51,8 +64,8 @@ class SourceInstallTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         shutil.rmtree(self.clone)  # the installed program must not need the clone
 
-        chrome = os.path.join(self.home, ".config", "google-chrome", "NativeMessagingHosts", "org.plume.host.json")
-        firefox = os.path.join(self.home, ".mozilla", "native-messaging-hosts", "org.plume.host.json")
+        chrome = os.path.join(self.home, *CHROME_MANIFESTS.split("/"), "org.plume.host.json")
+        firefox = os.path.join(self.home, *FIREFOX_MANIFESTS.split("/"), "org.plume.host.json")
         for manifest_path, argv_for in ((chrome, lambda m: ["chrome-extension://abc/"]),
                                         (firefox, lambda m: [manifest_path, m["allowed_extensions"][0]])):
             with open(manifest_path) as f:

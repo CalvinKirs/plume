@@ -14,6 +14,7 @@ jobs:
     # The from-source install is the one route that works on every machine, so it is tested on the oldest
     # Python it supports (3.8) up to the newest, and on macOS as well as Linux.
     strategy:
+      fail-fast: false  # one leg's failure should not hide the results of the others
       matrix:
         include:
           - { os: ubuntu-22.04, python: "3.8" }
