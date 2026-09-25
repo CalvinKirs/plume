@@ -5,12 +5,24 @@ on:
     branches: [main]
   pull_request:
 
+# Read-only by default. Only the job that publishes a release asks for more.
+permissions:
+  contents: read
+
 jobs:
   server:
+    # The from-source install is the one route that works on every machine, so it is tested on the oldest
+    # Python it supports (3.8) up to the newest, and on macOS as well as Linux.
     strategy:
       matrix:
-        os: [ubuntu-22.04, macos-14]
-        python: ["3.11", "3.12"]
+        include:
+          - { os: ubuntu-22.04, python: "3.8" }
+          - { os: ubuntu-22.04, python: "3.9" }
+          - { os: ubuntu-22.04, python: "3.10" }
+          - { os: ubuntu-22.04, python: "3.11" }
+          - { os: ubuntu-22.04, python: "3.12" }
+          - { os: macos-14, python: "3.9" }
+          - { os: macos-14, python: "3.12" }
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -29,3 +41,14 @@ jobs:
         working-directory: extension
       - run: npm test
         working-directory: extension
+
+  # Both browser packages must build, and Mozilla's linter must accept the Firefox one.
+  packages:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - run: node extension/scripts/build-extension.js chrome
+      - run: node extension/scripts/build-extension.js firefox
+      - run: npx --yes web-ext@10 lint --source-dir dist/extension-firefox

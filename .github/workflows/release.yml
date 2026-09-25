@@ -5,6 +5,10 @@ on:
     tags: ["v*"]
   workflow_dispatch:
 
+# Read-only by default. Only the job that publishes a release asks for more.
+permissions:
+  contents: read
+
 jobs:
   linux:
     runs-on: ubuntu-22.04
@@ -49,10 +53,18 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - name: Pack only what the browser needs
-        run: cd extension && zip -r ../plume-extension.zip manifest.json src icons
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - name: Build both browser packages with the same script
+        run: |
+          node extension/scripts/build-extension.js chrome --out dist/extension-chrome
+          node extension/scripts/build-extension.js firefox --out dist/extension-firefox
+      - name: Pack them
+        run: |
+          (cd dist/extension-chrome && zip -r ../../plume-extension.zip .)
+          (cd dist/extension-firefox && zip -r ../../plume-extension-firefox.zip .)
       - uses: actions/upload-artifact@v4
-        with: { name: plume-extension, path: plume-extension.zip }
+        with: { name: plume-extension, path: "plume-extension*.zip" }
 
   release:
     if: startsWith(github.ref, 'refs/tags/')
