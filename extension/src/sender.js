@@ -38,7 +38,7 @@
         return fail(`The Plume host did not answer within ${Math.round(timeoutMs / 1000)} s. Run \`plume setup\` again; if a macOS dialog is waiting for you, answer it.`);
       }
       const m = String((e && e.message) || e);
-      if (/not found/i.test(m)) {
+      if (/not found|no such native application/i.test(m)) { // Chrome and Firefox word this differently
         return fail('Plume host is not installed. Run the Plume setup program (`plume setup`), then restart Chrome.');
       }
       if (/forbidden/i.test(m)) return fail('The Plume host does not allow this extension id; re-run `plume setup`.');

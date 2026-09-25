@@ -7,10 +7,10 @@
   const STALE = 'The extension was reloaded or updated. Refresh this Gmail tab and try again.';
 
   // After the extension is reloaded, the copy of this script that is still running in an open tab is cut
-  // off from it, and chrome.runtime disappears.
+  // off from it, and the runtime API disappears.
   function connected() {
     try {
-      return Boolean(chrome.runtime && chrome.runtime.id);
+      return Boolean(Plume.api.runtime && Plume.api.runtime.id);
     } catch (e) {
       return false;
     }
@@ -76,7 +76,7 @@
         return notify('info', 'Plume dry run: nothing was sent',
           `To: ${list(draft.to)}\nCc: ${list(draft.cc)}\nBcc: ${list(draft.bcc)}\nSubject: ${draft.subject}\nBody: ${draft.text.length} characters\nReply headers: ${isReply ? (ctx ? 'found, thread ' + ctx.threadId : 'NOT found: ' + found.reason) : 'not a reply'}`, 30000);
       }
-      const res = await chrome.runtime.sendMessage({ type: 'plume:send', draft, ctx });
+      const res = await Plume.api.runtime.sendMessage({ type: 'plume:send', draft, ctx });
       if (!res || !res.ok) {
         return notify('error', 'Plume: NOT sent', (res && res.error) || 'The extension gave no answer.');
       }

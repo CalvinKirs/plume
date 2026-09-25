@@ -1,4 +1,4 @@
-// A short log of recent sends, kept in this browser only (chrome.storage.local). It stores
+// A short log of recent sends, kept in this browser only (storage.local). It stores
 // recipients, subject and outcome, but never the message text, so a missed notification can
 // still be checked later.
 (function (root) {

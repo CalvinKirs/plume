@@ -1,6 +1,6 @@
 const $ = (id) => document.getElementById(id);
 
-Plume.settings.loadSettings(chrome.storage.local).then((s) => {
+Plume.settings.loadSettings(Plume.api.storage.local).then((s) => {
   $('from').value = s.from;
   $('fromName').value = s.fromName;
   $('mode').value = s.mode;
@@ -9,7 +9,7 @@ Plume.settings.loadSettings(chrome.storage.local).then((s) => {
 });
 
 $('save').addEventListener('click', async () => {
-  await Plume.settings.saveSettings(chrome.storage.local, {
+  await Plume.settings.saveSettings(Plume.api.storage.local, {
     from: $('from').value.trim(), fromName: $('fromName').value.trim(), mode: $('mode').value, token: $('token').value.trim(), port: Number($('port').value) || 8765,
   });
   $('status').textContent = 'Saved';
@@ -26,7 +26,7 @@ function cell(row, text, cls) {
 }
 
 async function renderHistory() {
-  const list = await Plume.history.load(chrome.storage.local);
+  const list = await Plume.history.load(Plume.api.storage.local);
   const body = $('history').querySelector('tbody');
   body.textContent = '';
   for (const e of list) {
@@ -48,8 +48,8 @@ async function renderHistory() {
 }
 
 $('clear').addEventListener('click', async () => {
-  await Plume.history.clear(chrome.storage.local);
+  await Plume.history.clear(Plume.api.storage.local);
   renderHistory();
 });
-chrome.storage.onChanged.addListener((changes) => { if (changes.history) renderHistory(); });
+Plume.api.storage.onChanged.addListener((changes) => { if (changes.history) renderHistory(); });
 renderHistory();

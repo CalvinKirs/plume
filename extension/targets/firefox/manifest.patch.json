@@ -1,0 +1,15 @@
+{
+  "key": null,
+  "version_name": null,
+  "background": {
+    "service_worker": null,
+    "scripts": ["src/platform.js", "src/settings.js", "src/sender.js", "src/history.js", "src/background.js"]
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "plume@calvinkirs.github.io",
+      "strict_min_version": "142.0",
+      "data_collection_permissions": { "required": ["personalCommunications"] }
+    }
+  }
+}

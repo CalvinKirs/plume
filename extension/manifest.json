@@ -8,11 +8,11 @@
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAozWe3Bwal1GNdPRiNJNMT05CeFq2RxIs2QArCXSRjlN6+xmpVBJ26CaxYeZwYCkwA14UAM8AfLQ0ZFELZnGJfKru6WIwWzHGjc03d5iVhT1fVO1KRBRFzJEV0L159AiQ1Q/jpqLqqwZUh5WpFdxAqEI1GOCmWJcOKuCJOcjTCYcSS/CKg+UePto1+sjBZ77FWP30rXUrqVHLk8Cfk8GE1Mwm4FjlGdD2d78AHAZjDyJCDjVgAzYexrpbcNaG1A/u5eXC+862Xa1YZr4ctpgs1ifo7sfog8PcOwb9zeR+QXEAUh5ENN98lNsVCNJevzHrYM9AVXSmktbBApDRnjo9QwIDAQAB",
   "permissions": ["storage", "nativeMessaging"],
   "host_permissions": ["http://127.0.0.1/*"],
-  "background": { "service_worker": "src/background.js" },
+  "background": { "service_worker": "targets/chrome/service-worker.js" },
   "content_scripts": [
     {
       "matches": ["https://mail.google.com/*"],
-      "js": ["src/dom-text.js", "src/gmail-dom.js", "src/reply-context.js", "src/content.js"],
+      "js": ["src/platform.js", "src/dom-text.js", "src/gmail-dom.js", "src/reply-context.js", "src/content.js"],
       "css": ["src/content.css", "src/logo.css"],
       "run_at": "document_idle"
     }

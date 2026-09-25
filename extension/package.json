@@ -4,7 +4,8 @@
   "license": "MIT",
   "scripts": {
     "test": "node --test \"tests/*.test.js\"",
-    "e2e": "node e2e/run.js"
+    "e2e": "node e2e/run.js",
+    "build": "node scripts/build-extension.js"
   },
   "devDependencies": {
     "jsdom": "^26.0.0",
