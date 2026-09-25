@@ -24,7 +24,9 @@ def _strip_quarantine(path):
 def install_host(home=None, python=None, server_dir=None, browsers=None, system=None, binary=None):
     """Register the host with each browser and return the paths of the manifests written.
 
-    Run from source, the host is a small launcher script that starts `python -m plume native`.
+    Run from source, the package is copied to ~/.local/share/plume/src and the host is a small launcher
+    script that starts `python -m plume native` from there, so the checkout can be moved or deleted
+    afterwards. This works with any Python that runs Plume, on any Linux or macOS machine, Intel or ARM.
     Run from a packaged build (`binary`), the program itself is copied to a fixed location and
     registered. Chrome starts it with the extension's origin as an argument, and the program
     takes that as the cue to run in native mode.
@@ -73,9 +75,19 @@ def install_host(home=None, python=None, server_dir=None, browsers=None, system=
         if system == "Darwin":
             _strip_quarantine(cleanup)
     else:
+        source_root = os.path.join(install_dir, "src")
+        package = os.path.join(server_dir, "plume")
+        if not os.path.isfile(os.path.join(package, "__init__.py")):
+            raise SystemExit(f"cannot find the plume package in {server_dir}")
+        installed_package = os.path.join(source_root, "plume")
+        # realpath, not abspath: with a symlinked home (macOS /var, a mounted /home) the same directory
+        # can be spelled two ways, and deleting it as if it were another one would destroy the install.
+        if os.path.realpath(package) != os.path.realpath(installed_package):
+            shutil.rmtree(installed_package, ignore_errors=True)
+            shutil.copytree(package, installed_package, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
         launcher = os.path.join(install_dir, "plume-native-host")
         with open(launcher, "w") as f:
-            f.write(f"#!/bin/sh\nexport PYTHONPATH={shlex.quote(server_dir)}\nexec {shlex.quote(python)} -m plume native\n")
+            f.write(f"#!/bin/sh\nexport PYTHONPATH={shlex.quote(source_root)}\nexec {shlex.quote(python)} -m plume native\n")
     os.chmod(launcher, os.stat(launcher).st_mode | stat.S_IXUSR)
 
     base = {

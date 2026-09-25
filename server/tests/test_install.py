@@ -6,12 +6,14 @@ import unittest
 from plume.config import EXTENSION_ORIGIN
 from plume.install import HOST_NAME, install_host
 
+from sources import fake_source
+
 
 class InstallTests(unittest.TestCase):
     def test_registers_manifest_and_launcher(self):
-        home = tempfile.mkdtemp()
+        home = tempfile.mkdtemp(prefix="plume test ")  # a space in the path must survive into the launcher script
         os.makedirs(os.path.join(home, ".config", "google-chrome"))
-        paths = install_host(home=home, python="/usr/bin/python3", server_dir="/opt/my plume/server", system="Linux")
+        paths = install_host(home=home, python="/usr/bin/python3", server_dir=fake_source(), system="Linux")
         self.assertEqual(len(paths), 1)
         with open(paths[0]) as f:
             manifest = json.load(f)
@@ -21,7 +23,8 @@ class InstallTests(unittest.TestCase):
         self.assertTrue(os.access(launcher, os.X_OK))
         with open(launcher) as f:
             text = f.read()
-        self.assertIn("PYTHONPATH='/opt/my plume/server'", text)
+        self.assertIn(f"PYTHONPATH='{os.path.join(home, '.local', 'share', 'plume', 'src')}'", text)
+        self.assertTrue(os.path.isfile(os.path.join(home, ".local", "share", "plume", "src", "plume", "__init__.py")))
         self.assertIn("-m plume native", text)
 
     def test_no_browser_and_unsupported_os(self):
@@ -57,7 +60,7 @@ class MacInstallTests(unittest.TestCase):
 
     def test_registers_in_library_application_support_for_every_detected_browser(self):
         home = self.mac_home("Google/Chrome", "BraveSoftware/Brave-Browser")
-        paths = install_host(home=home, python="/usr/bin/python3", server_dir="/s", system="Darwin")
+        paths = install_host(home=home, python="/usr/bin/python3", server_dir=fake_source(), system="Darwin")
         self.assertEqual(sorted(os.path.relpath(p, home) for p in paths), [
             "Library/Application Support/BraveSoftware/Brave-Browser/NativeMessagingHosts/org.plume.host.json",
             "Library/Application Support/Google/Chrome/NativeMessagingHosts/org.plume.host.json",
@@ -80,7 +83,7 @@ class MacInstallTests(unittest.TestCase):
             run.assert_not_called()
 
     def test_explicit_browser_is_registered_even_if_not_detected(self):
-        (path,) = install_host(home=tempfile.mkdtemp(), python="p", server_dir="/s", system="Darwin", browsers=["edge"])
+        (path,) = install_host(home=tempfile.mkdtemp(), python="p", server_dir=fake_source(), system="Darwin", browsers=["edge"])
         self.assertIn("Microsoft Edge/NativeMessagingHosts", path)
 
 

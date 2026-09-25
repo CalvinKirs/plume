@@ -83,7 +83,10 @@ def cmd_setup(cfg, args):
     args.browser = None
     cmd_install_host(cfg, args)
     if getattr(sys, "frozen", False):
-        input("\nPress Enter to close this window.")  # a double-clicked console would vanish otherwise
+        try:
+            input("\nPress Enter to close this window.")  # a double-clicked console would vanish otherwise
+        except (EOFError, KeyboardInterrupt):
+            pass  # everything above already succeeded
 
 
 def cmd_check(cfg, args):
@@ -123,4 +126,10 @@ def main(argv=None):
                 "configure": cmd_configure, "install-host": cmd_install_host, "check": cmd_check}
     args.command = args.command or "setup"  # double-clicked binary: run the guided setup
     # The native host loads its own config, so a broken file is reported back to the extension.
-    handlers[args.command](None if args.command == "native" else load_config(), args)
+    try:
+        handlers[args.command](None if args.command == "native" else load_config(), args)
+    except (EOFError, KeyboardInterrupt):
+        if args.command in ("setup", "configure", "auth"):
+            # These commands ask questions. Ending the input or Ctrl+C is a cancellation, not a crash.
+            raise SystemExit("\nCancelled. Nothing was changed after the last answer.")
+        raise SystemExit(130)  # a stopped serve or native host is a normal shutdown, not an error to explain
