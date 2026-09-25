@@ -46,7 +46,7 @@ The installer uses `curl` on purpose. macOS marks files downloaded in a browser 
 Gatekeeper then refuses to run a program that Apple has not signed. If you download an archive from the
 releases page in a browser instead, run `xattr -dr com.apple.quarantine plume` on the extracted folder before
 its `setup`. The installer takes the newest release, pre-releases included. To pick a specific one, set
-`PLUME_VERSION`, for example `PLUME_VERSION=v0.1.0-alpha.2`.
+`PLUME_VERSION`, for example `PLUME_VERSION=v0.1.0-alpha.3`.
 
 The prebuilt Linux program needs glibc 2.31 or newer, which means Debian 11, Ubuntu 20.04, RHEL 9 or anything
 more recent. Older systems can use the source route. `plume --version` shows which version you have.

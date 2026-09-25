@@ -14,7 +14,7 @@ Plume is an independent project. It is not affiliated with or endorsed by the Ap
 
 ## Status
 
-Plume is an alpha release (0.1.0-alpha.2). It has been used to send mail as `@apache.org` from Gmail on
+Plume is an alpha release (0.1.0-alpha.3). It has been used to send mail as `@apache.org` from Gmail on
 macOS (Apple silicon), for new messages and for replies written inline in a thread, with To, Cc and Bcc.
 The Linux build passes its tests but has had little real use. Attachments and HTML formatting are not
 supported, so messages go out as plain text, and there is no Windows support yet. The extension is not in
