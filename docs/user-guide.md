@@ -17,31 +17,39 @@ Your network must allow connections to `mail-relay.apache.org` on port 587 or 46
 
 ## Installing the program
 
-The quickest way is the installer. It downloads the latest release for your system, asks for your ASF user
-name and password, copies the program to `~/.local/share/plume/app/` and registers it with every
-Chrome-based browser it finds:
+The recommended route is a source install. The program handles your ASF password, and installing from
+source lets you read exactly what will run. It needs no build step, only Python 3.8 or newer, and works on
+any macOS or Linux machine, whatever the processor:
+
+```
+git clone https://github.com/CalvinKirs/plume.git
+cd plume/server
+python3 -m plume setup
+```
+
+`setup` asks for your ASF user name and password, copies the program to `~/.local/share/plume/src` and
+registers it with every supported browser it finds. You can delete the checkout afterwards. Run the same
+command from a newer checkout to update. It uses the Python that ran it, so keep that Python installed.
+
+Prebuilt packages exist for two reasons: some machines have no Python 3.8, and some people prefer a single
+command. They bundle their own Python (built with `./packaging/build.sh`), so nothing else has to be
+installed, at the price of running a binary you cannot read. The installer takes the prebuilt program on
+macOS with Apple silicon and on Linux with x86_64, and falls back to the source route on any other
+machine, such as an Intel Mac or an ARM Linux box. `PLUME_FROM_SOURCE=1` forces the source route
+everywhere. The result is the same either way:
 
 ```
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/CalvinKirs/plume/main/packaging/install.sh)"
 ```
 
-It uses `curl` on purpose. macOS marks files downloaded in a browser as quarantined, and Gatekeeper then
-refuses to run a program that Apple has not signed. If you download an archive from the releases page in a
-browser instead, run `xattr -dr com.apple.quarantine plume` on the extracted folder before its `setup`.
-The installer takes the newest release, pre-releases included. To pick a specific one, set
+The installer uses `curl` on purpose. macOS marks files downloaded in a browser as quarantined, and
+Gatekeeper then refuses to run a program that Apple has not signed. If you download an archive from the
+releases page in a browser instead, run `xattr -dr com.apple.quarantine plume` on the extracted folder before
+its `setup`. The installer takes the newest release, pre-releases included. To pick a specific one, set
 `PLUME_VERSION`, for example `PLUME_VERSION=v0.1.0-alpha.2`.
 
-The Linux build needs glibc 2.31 or newer, which means Debian 11, Ubuntu 20.04, RHEL 9 or anything more
-recent. `plume --version` shows which version you have.
-
-You can also build the program yourself, which needs Python 3.11 or newer:
-
-```
-git clone https://github.com/CalvinKirs/plume.git
-cd plume
-./packaging/build.sh
-./dist/plume/plume setup
-```
+The prebuilt Linux program needs glibc 2.31 or newer, which means Debian 11, Ubuntu 20.04, RHEL 9 or anything
+more recent. Older systems can use the source route. `plume --version` shows which version you have.
 
 ## Installing the extension
 
@@ -55,6 +63,26 @@ name next to it, as in `Calvin Kirs <kirs@apache.org>`, fill in Your name as wel
 bare address is shown. Save, then quit the browser completely (Cmd+Q on macOS) and start it again. That is
 only needed once, so that the browser notices the program you registered. After you update the extension,
 press its Reload button on `chrome://extensions` and refresh the Gmail tab.
+
+### Firefox
+
+Plume works in Firefox. It has been tried by hand on macOS, and not yet on Linux. Firefox only runs extensions
+that Mozilla has signed, so until a signed build is published you load the extension temporarily, and it is
+gone again when you quit Firefox. You need a checkout of the repository, Python 3.8 or newer for the program,
+and Node.js to build the extension:
+
+```
+cd plume/server && python3 -m plume install-host --browser firefox && cd ..
+node extension/scripts/build-extension.js firefox
+```
+
+Then open `about:debugging#/runtime/this-firefox`, choose Load Temporary Add-on and select `manifest.json`
+in `dist/extension-firefox`. Open the add-on's preferences on `about:addons` and enter your address as
+described above.
+
+If the button does not appear on Gmail, open the extension's Permissions on `about:addons` and allow it to
+run on `mail.google.com`. Firefox installed as a Snap package on Ubuntu may not be allowed to start the
+program at all; that has not been tried. Please report what you find.
 
 ## Sending mail
 

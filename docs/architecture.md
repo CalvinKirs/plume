@@ -101,14 +101,20 @@ gmail.GmailArchive -> tokens.TokenProvider -> oauth.GoogleOAuth, ports.TokenStor
                    -> ports.Transport <- transport.UrllibTransport
 ```
 
-There are two ways in: Chrome's native messaging (`native.py`) and a token-protected HTTP endpoint that is
+There are two ways in: the browser's native messaging (`native.py`) and a token-protected HTTP endpoint that is
 meant for debugging (`app.py`). Both call `api.send_payload`, so a send behaves the same either way.
 `SendService` sends through the mailer first and only then tries to archive a copy, which is why an
 archiving problem cannot fail a send. `relay.SmtpRelayMailer` is the only code that talks to the ASF relay,
 and it also keeps the relay's reply to the DATA command, which is where the queue ID is. `wiring.py`
 builds the whole graph from the configuration and `cli.py` exposes it as commands (`setup`, `configure`,
-`install-host`, `native`, `serve` and `auth`). To add another kind of archive, such as IMAP APPEND,
+`install-host`, `check`, `native`, `serve` and `auth`). To add another kind of archive, such as IMAP APPEND,
 implement `SentArchive` and select it in `wiring.py`.
+
+The program serves every browser through one interface. `browsers.py` has a small class per browser family
+that knows whether the browser is installed, where its host manifest goes and how that manifest names the
+extensions allowed to start the host: Chromium browsers use `allowed_origins`, Firefox uses
+`allowed_extensions`. `install.py` works only through that interface, and `launch.py` recognises that a
+browser started the program, whichever browser it was.
 
 ## The extension
 
@@ -123,6 +129,25 @@ holds every Gmail-specific selector and reads recipients, subject and body from 
 `background.js` receives the draft and sends it to the program with `sender.js`, using native messaging by
 default. It also adds the result to the list of recent sends kept by `history.js`. `settings.js` and
 `options.html` deal with the extension's settings and show that list.
+
+### One codebase, one target per browser
+
+Everything above is shared by all browsers, and none of it names a browser. The shared code reaches the
+extension API only through `platform.js`, which uses `browser` where it exists (Firefox) and `chrome`
+otherwise, and a test fails if any other file in `src/` uses either name or `importScripts`. What is
+specific to a browser lives in `targets/<browser>/`:
+
+- `manifest.patch.json` is a JSON merge patch applied to the base `manifest.json`, which is the Chrome
+  manifest. The Chrome patch is empty. The Firefox patch removes the Chrome-only keys, replaces the service
+  worker with an event page and declares the add-on ID.
+- Files that only that browser needs. Chrome's background is a service worker that has to load its own
+  scripts, so `targets/chrome/service-worker.js` does that. Firefox lists the same scripts in its manifest.
+
+`scripts/build-extension.js <target>` assembles a package from the shared sources and one target, and refuses
+to build if the manifest points at a file that was not packaged. Tests check that Chrome's package is exactly
+the base manifest, that Firefox differs from it only in the four keys that have to differ, and that no package
+contains another target's files. Adding a browser means adding a directory under `targets/`. A change for one
+browser cannot reach another, because it is not in the code they share.
 
 Gmail's markup is not a public interface and can change at any time, so the selectors in `gmail-dom.js` are
 the part most likely to need attention. [selectors.md](selectors.md) explains how to check them.
