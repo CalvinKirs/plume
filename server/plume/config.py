@@ -6,6 +6,13 @@ from dataclasses import dataclass, field
 # The manifest pins the extension's key, which fixes its id and therefore its origin.
 EXTENSION_ORIGIN = "chrome-extension://mabkbpnhmakajgmgpcehigllechcaehb"
 
+# Firefox identifies an add-on by the id in its manifest, not by an origin. It must match
+# browser_specific_settings.gecko.id in extension/targets/firefox/manifest.patch.json (a test checks this).
+FIREFOX_EXTENSION_ID = "plume@calvinkirs.github.io"
+
+# The name Chrome and Firefox know the native messaging host by.
+HOST_NAME = "org.plume.host"
+
 
 @dataclass(frozen=True)
 class Config:

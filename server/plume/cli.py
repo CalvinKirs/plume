@@ -12,15 +12,13 @@ from . import __version__
 from .app import make_handler
 from .config import DEFAULT_CONFIG_PATH, ensure_private_dir, load_config, save_config
 from .install import BROWSERS, install_host
+from .launch import is_native_launch
 from .native import serve as serve_native
 from .oauth import run_local_auth
 from .relay import connect
 from .tls import default_context
 from .tokens import FileTokenStore
 from .wiring import UnconfiguredService, build_oauth, build_service
-
-
-NATIVE_ORIGIN_PREFIX = "chrome-extension://"
 
 
 def cmd_serve(cfg, args):
@@ -106,7 +104,7 @@ def cmd_check(cfg, args):
 def cmd_install_host(cfg, args):
     for path in install_host(browsers=args.browser):
         print("registered:", path)
-    print("Restart Chrome, then use the extension.")
+    print("Restart your browser, then use the extension.")
 
 
 def main(argv=None):
@@ -118,8 +116,8 @@ def main(argv=None):
     inst = sub.add_parser("install-host")
     inst.add_argument("--browser", action="append", choices=BROWSERS)
     argv = sys.argv[1:] if argv is None else argv
-    if argv and argv[0].startswith(NATIVE_ORIGIN_PREFIX):
-        return cmd_native(None, None)  # Chrome launched us as a native host
+    if is_native_launch(argv):
+        return cmd_native(None, None)  # a browser started us as its native messaging host
     args = parser.parse_args(argv)
     handlers = {"serve": cmd_serve, "native": cmd_native, "auth": cmd_auth, "setup": cmd_setup,
                 "configure": cmd_configure, "install-host": cmd_install_host, "check": cmd_check}

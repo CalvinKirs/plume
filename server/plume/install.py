@@ -1,4 +1,4 @@
-"""Register Plume as a Chrome native messaging host (Linux and macOS)."""
+"""Register Plume as a native messaging host with the installed browsers (Linux and macOS)."""
 import json
 import os
 import platform
@@ -8,27 +8,8 @@ import stat
 import subprocess
 import sys
 
-from .config import EXTENSION_ORIGIN
-
-HOST_NAME = "org.plume.host"
-
-# Browser name -> profile directory. A browser counts as installed if its directory exists.
-_LINUX = {
-    "chrome": ".config/google-chrome", "chromium": ".config/chromium",
-    "brave": ".config/BraveSoftware/Brave-Browser", "edge": ".config/microsoft-edge",
-}
-_MAC = {
-    "chrome": "Library/Application Support/Google/Chrome", "chromium": "Library/Application Support/Chromium",
-    "brave": "Library/Application Support/BraveSoftware/Brave-Browser", "edge": "Library/Application Support/Microsoft Edge",
-}
-BROWSERS = sorted(set(_LINUX) | set(_MAC))
-
-
-def _browser_dirs(home, system):
-    table = {"Linux": _LINUX, "Darwin": _MAC}.get(system)
-    if table is None:
-        raise SystemExit(f"install-host does not support {system} yet (Linux and macOS only)")
-    return {name: os.path.join(home, rel) for name, rel in table.items()}
+from .browsers import BROWSERS, TARGETS, UnsupportedSystem  # noqa: F401  (BROWSERS is re-exported for the CLI)
+from .config import HOST_NAME
 
 
 def _frozen_binary():
@@ -58,16 +39,18 @@ def install_host(home=None, python=None, server_dir=None, browsers=None, system=
     python = python or sys.executable
     server_dir = server_dir or os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     system = system or platform.system()
-    dirs = _browser_dirs(home, system)
     if browsers:
-        unknown = set(browsers) - set(dirs)
+        unknown = set(browsers) - set(TARGETS)
         if unknown:
             raise SystemExit(f"unknown browser: {', '.join(sorted(unknown))}")
-        targets = list(browsers)
+        targets = [TARGETS[name] for name in browsers]
     else:
-        targets = [b for b, d in dirs.items() if os.path.isdir(d)]
+        try:
+            targets = [b for b in TARGETS.values() if b.installed(home, system)]
+        except UnsupportedSystem as e:
+            raise SystemExit(f"install-host: {e}") from None
         if not targets:
-            raise SystemExit("no Chrome, Chromium, Brave or Edge profile found; pass --browser <name>")
+            raise SystemExit("no Chrome, Chromium, Brave, Edge or Firefox profile found; pass --browser <name>")
 
     install_dir = os.path.join(home, ".local", "share", "plume")
     os.makedirs(install_dir, exist_ok=True)
@@ -95,19 +78,21 @@ def install_host(home=None, python=None, server_dir=None, browsers=None, system=
             f.write(f"#!/bin/sh\nexport PYTHONPATH={shlex.quote(server_dir)}\nexec {shlex.quote(python)} -m plume native\n")
     os.chmod(launcher, os.stat(launcher).st_mode | stat.S_IXUSR)
 
-    manifest = {
+    base = {
         "name": HOST_NAME,
         "description": "Plume: send mail through the ASF relay",
         "path": launcher,
         "type": "stdio",
-        "allowed_origins": [EXTENSION_ORIGIN + "/"],
     }
     written = []
     for browser in targets:
-        host_dir = os.path.join(dirs[browser], "NativeMessagingHosts")
+        try:
+            host_dir = browser.manifest_dir(home, system)
+        except UnsupportedSystem as e:
+            raise SystemExit(f"install-host: {e}") from None
         os.makedirs(host_dir, exist_ok=True)
         path = os.path.join(host_dir, HOST_NAME + ".json")
         with open(path, "w") as f:
-            json.dump(manifest, f, indent=2)
+            json.dump(browser.host_manifest(base), f, indent=2)
         written.append(path)
     return written
