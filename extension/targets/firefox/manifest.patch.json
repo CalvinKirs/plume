@@ -6,9 +6,7 @@
     "scripts": ["src/platform.js", "src/settings.js", "src/sender.js", "src/history.js", "src/background.js"]
   },
   "action": {
-    "default_area": "navbar",
-    "default_icon": { "16": "icons/icon-16.png", "32": "icons/icon-32.png" },
-    "default_title": "Open Plume options"
+    "default_area": "navbar"
   },
   "browser_specific_settings": {
     "gecko": {

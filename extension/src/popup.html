@@ -1,0 +1,29 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Recent Plume sends</title>
+<style>
+  body { width: 360px; margin: 0; padding: 16px; box-sizing: border-box; font: 14px system-ui, sans-serif; color: #202124; }
+  h1 { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; font-size: 17px; }
+  h1 img { width: 24px; height: 24px; }
+  ul { list-style: none; max-height: 400px; overflow-y: auto; margin: 0; padding: 0; }
+  li { padding: 10px 0; border-top: 1px solid #e5e7eb; }
+  .row { display: flex; justify-content: space-between; gap: 8px; }
+  .subject { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+  .status { white-space: nowrap; }
+  .ok { color: #15803d; } .bad { color: #b91c1c; }
+  .details { color: #666; margin-top: 3px; overflow-wrap: anywhere; }
+  #empty { color: #666; margin: 20px 0; }
+  footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e5e7eb; padding-top: 12px; }
+  a, button { font: inherit; color: #1558b0; }
+  button { border: 0; padding: 0; background: none; cursor: pointer; }
+</style>
+<h1><img src="../icons/icon-32.png" alt="">Recent sends</h1>
+<ul id="recent"></ul>
+<p id="empty" hidden>No sends yet.</p>
+<footer>
+  <a id="all-history" href="history.html" target="_blank">View all</a>
+  <button id="settings" type="button">Settings</button>
+</footer>
+<script src="platform.js"></script>
+<script src="history.js"></script>
+<script src="popup.js"></script>

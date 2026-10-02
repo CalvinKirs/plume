@@ -3,7 +3,6 @@ const assert = require('node:assert');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const vm = require('node:vm');
 const { assertSafeOutput, applyMergePatch, listTargets, buildManifest, packageFiles, referencedFiles, build } = require('../scripts/build-extension');
 
 const ROOT = path.resolve(__dirname, '..');
@@ -51,21 +50,14 @@ test('Firefox: an event page whose scripts load the platform layer first and the
   assert.match(ff.browser_specific_settings.gecko.id, /^[^@\s]+@[^@\s]+$/, 'an add-on id in email form');
 });
 
-test('Firefox has a toolbar action that opens Plume options', () => {
+test('Chrome and Firefox toolbar actions open the same recent sends popup', () => {
+  const chrome = buildManifest('chrome');
   const ff = buildManifest('firefox');
+  assert.strictEqual(chrome.action.default_popup, 'src/popup.html');
+  assert.strictEqual(ff.action.default_popup, chrome.action.default_popup);
   assert.strictEqual(ff.action.default_area, 'navbar');
-  assert.strictEqual(ff.action.default_title, 'Open Plume options');
-  assert.strictEqual(ff.action.default_icon['32'], 'icons/icon-32.png');
-  let click;
-  let opened = false;
-  const context = { Plume: { api: {
-    action: { onClicked: { addListener: (fn) => { click = fn; } } },
-    runtime: { onMessage: { addListener: () => {} }, openOptionsPage: () => { opened = true; } },
-  } } };
-  vm.runInNewContext(fs.readFileSync(path.join(ROOT, 'src', 'background.js'), 'utf8'), context);
-  assert.strictEqual(typeof click, 'function');
-  click();
-  assert.ok(opened);
+  assert.strictEqual(chrome.action.default_icon['32'], 'icons/icon-32.png');
+  assert.ok(referencedFiles(chrome).includes('src/popup.html'));
 });
 
 test('the Chrome service worker loads the same scripts, in the same order, as the Firefox event page', () => {

@@ -97,12 +97,24 @@ fs.writeFileSync(path.join(home, '.config', 'plume', 'config.json'),
     check('every send attempt is logged, newest first, without the message text',
       log.length >= 3 && log[0].ok === true && log[0].relayResponse === '250 2.0.0 Ok: queued as E2E42' && log.some((e) => !e.ok && /relay failure/.test(e.error)) && !JSON.stringify(log).includes('thanks'),
       `entries=${log.length}`);
-    const opts = await ctx.newPage();
-    await opts.goto(`chrome-extension://mabkbpnhmakajgmgpcehigllechcaehb/src/options.html`);
-    await opts.waitForSelector('#history tbody tr');
-    const rows = await opts.$$eval('#history tbody tr', (trs) => trs.map((tr) => tr.textContent));
-    check('the options page lists the recent sends with their outcome', rows.length >= 3 && /✓ sent/.test(rows[0]) && /queued as E2E42/.test(rows[0]) && rows.some((r) => /✗ not sent/.test(r)), rows[0]);
-    await opts.close();
+    const popup = await ctx.newPage();
+    await popup.goto('chrome-extension://mabkbpnhmakajgmgpcehigllechcaehb/src/popup.html');
+    await popup.waitForSelector('#recent li');
+    const summaries = await popup.$$eval('#recent li', (items) => items.map((item) => item.textContent));
+    check('the action popup shows recent send outcomes', summaries.length >= 3 && /✓ sent/.test(summaries[0]) && summaries.some((s) => /✗ not sent/.test(s)));
+    const historyOpened = ctx.waitForEvent('page');
+    await popup.click('#all-history');
+    const historyPage = await historyOpened;
+    await historyPage.waitForSelector('#history tbody tr');
+    const rows = await historyPage.$$eval('#history tbody tr', (trs) => trs.map((tr) => tr.textContent));
+    check('the history page lists recent sends with their outcome', rows.length >= 3 && /✓ sent/.test(rows[0]) && /queued as E2E42/.test(rows[0]) && rows.some((r) => /✗ not sent/.test(r)), rows[0]);
+    await historyPage.close();
+    const settingsOpened = ctx.waitForEvent('page');
+    await popup.click('#settings');
+    const settingsPage = await settingsOpened;
+    check('the popup opens settings in a separate tab', settingsPage.url().endsWith('/src/options.html'), settingsPage.url());
+    await settingsPage.close();
+    await popup.close();
 
     // Gmail can show a copy of the toolbar. A copied button has no listeners, and must still work.
     await page.evaluate(() => {
