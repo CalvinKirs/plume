@@ -39,7 +39,7 @@
       }
       const m = String((e && e.message) || e);
       if (/not found|no such native application/i.test(m)) { // Chrome and Firefox word this differently
-        return fail('Plume host is not installed. Run the Plume setup program (`plume setup`), then restart Chrome.');
+        return fail('Plume host is not installed. Run the Plume setup program (`plume setup`), then try again. If it still cannot find the host, restart your browser and retry.');
       }
       if (/forbidden/i.test(m)) return fail('The Plume host does not allow this extension id; re-run `plume setup`.');
       return fail('Plume host failed: ' + m);

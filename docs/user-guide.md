@@ -78,7 +78,7 @@ node extension/scripts/build-extension.js firefox
 
 Then open `about:debugging#/runtime/this-firefox`, choose Load Temporary Add-on and select `manifest.json`
 in `dist/extension-firefox`. Open the add-on's preferences on `about:addons` and enter your address as
-described above.
+described above. The Plume toolbar button also opens its options and recent sends.
 
 If the button does not appear on Gmail, open the extension's Permissions on `about:addons` and allow it to
 run on `mail.google.com`. Firefox installed as a Snap package on Ubuntu may not be allowed to start the

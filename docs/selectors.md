@@ -16,7 +16,7 @@ Open a compose window in Gmail and run these in the browser's developer console:
 document.querySelectorAll('div[role="textbox"][g_editable="true"]').length   // message body, expect 1 per compose
 document.querySelector('.aoO[role="button"]')                                // Send button
 document.querySelector('input[name="subjectbox"]').value                     // subject
-document.querySelectorAll('[name="to"] [email], input[name="to"]')           // recipients
+document.querySelectorAll('[name="to"] [email], input[name="to"], [name="to"] input') // recipients, including an address still being typed
 document.querySelector('.og[role="button"]')                                 // Discard button
 document.querySelectorAll('[data-legacy-message-id]')                        // messages of the open thread
 ```
