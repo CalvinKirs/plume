@@ -43,7 +43,7 @@ fetch() {
 }
 
 # GitHub's "latest" release never includes pre-releases, so ask for the newest release of any kind.
-# PLUME_VERSION=v0.1.0-alpha.2 picks a specific one. Only called when a release is actually needed.
+# PLUME_VERSION=v0.1.0-alpha.4 picks a specific one. Only called when a release is actually needed.
 tag_of_newest_release() {
   sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1/p' | head -n 1
 }

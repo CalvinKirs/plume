@@ -46,7 +46,7 @@ The installer uses `curl` on purpose. macOS marks files downloaded in a browser 
 Gatekeeper then refuses to run a program that Apple has not signed. If you download an archive from the
 releases page in a browser instead, run `xattr -dr com.apple.quarantine plume` on the extracted folder before
 its `setup`. The installer takes the newest release, pre-releases included. To pick a specific one, set
-`PLUME_VERSION`, for example `PLUME_VERSION=v0.1.0-alpha.3`.
+`PLUME_VERSION`, for example `PLUME_VERSION=v0.1.0-alpha.4`.
 
 The prebuilt Linux program needs glibc 2.31 or newer, which means Debian 11, Ubuntu 20.04, RHEL 9 or anything
 more recent. Older systems can use the source route. `plume --version` shows which version you have.
@@ -60,9 +60,10 @@ choose Load unpacked and select the folder.
 
 Then open the extension's Options and enter your `@apache.org` address. If you want recipients to see your
 name next to it, as in `Calvin Kirs <kirs@apache.org>`, fill in Your name as well. Without a name, only the
-bare address is shown. Save, then quit the browser completely (Cmd+Q on macOS) and start it again. That is
-only needed once, so that the browser notices the program you registered. After you update the extension,
-press its Reload button on `chrome://extensions` and refresh the Gmail tab.
+bare address is shown. Save, then refresh any open Gmail tab with F5 (Cmd+R on macOS) to load the extension.
+After updating the extension, press its Reload button on `chrome://extensions` and refresh the Gmail tab
+again. If Chrome cannot find the Plume program after registration, quit Chrome completely (Cmd+Q on macOS)
+and reopen it once.
 
 Click the Plume icon in the browser toolbar to see recent send attempts. The popup links to the full
 history and to Settings. If the icon is inside Chrome's Extensions menu, you can pin it to the toolbar.
@@ -71,17 +72,18 @@ history and to Settings. If the icon is inside Chrome's Extensions menu, you can
 
 Plume works in Firefox. It has been tried by hand on macOS, and not yet on Linux. Firefox only runs extensions
 that Mozilla has signed, so until a signed build is published you load the extension temporarily, and it is
-gone again when you quit Firefox. You need a checkout of the repository, Python 3.8 or newer for the program,
-and Node.js to build the extension:
+gone again when you quit Firefox. Download and unzip `plume-extension-firefox.zip` from the
+[releases page](https://github.com/CalvinKirs/plume/releases). You also need a checkout of the repository
+and Python 3.8 or newer to register the program with Firefox:
 
 ```
-cd plume/server && python3 -m plume install-host --browser firefox && cd ..
-node extension/scripts/build-extension.js firefox
+cd plume/server && python3 -m plume install-host --browser firefox
 ```
 
 Then open `about:debugging#/runtime/this-firefox`, choose Load Temporary Add-on and select `manifest.json`
-in `dist/extension-firefox`. Open the add-on's preferences on `about:addons` and enter your address as
-described above. The Plume toolbar button opens the same recent sends popup as in Chrome.
+in the unzipped extension folder. Open the add-on's preferences on `about:addons` and enter your address as
+described above. Refresh any open Gmail tab with F5 (Cmd+R on macOS); you do not need to restart Firefox.
+The Plume toolbar button opens the same recent sends popup as in Chrome.
 
 If the button does not appear on Gmail, open the extension's Permissions on `about:addons` and allow it to
 run on `mail.google.com`. Firefox installed as a Snap package on Ubuntu may not be allowed to start the
@@ -149,14 +151,15 @@ recognise as a subscriber.
 In the commands below, `plume` means the installed program, `~/.local/share/plume/app/plume`. It is not on
 your `PATH`. Errors inside the program are logged to `~/.config/plume/host.log`.
 
-- If the button does not appear, refresh the Gmail tab and check that the extension is enabled and was
-  loaded from the `extension` directory. If Gmail has changed its layout, the extension needs an update
+- If the button does not appear, refresh the Gmail tab with F5 (Cmd+R on macOS) and check that the extension
+  is enabled and loaded from the unzipped folder. If Gmail has changed its layout, the extension needs an update
   (see [selectors.md](selectors.md)).
 - If clicking does nothing, or the notification says the extension was reloaded or updated, refresh the
-  Gmail tab.
+  Gmail tab with F5 (Cmd+R on macOS).
 - "no recipients found": add at least one recipient. In an inline reply, click the recipient line to expand it.
 - "the message body reads as empty": type some text. Plume does not send attachments on their own.
-- "Plume host is not installed": run `plume setup` again, then quit and restart the browser.
+- "Plume host is not installed": run `plume setup` again. If Chrome still cannot find it, quit and restart
+  Chrome.
 - "does not allow this extension id": the extension was loaded from a modified copy. Use the original
   `extension` directory, whose ID is fixed, and run `plume setup` again.
 - "did not answer within 90 s": a macOS dialog may be waiting behind the browser window, or the relay

@@ -14,7 +14,7 @@ Plume is an independent project. It is not affiliated with or endorsed by the Ap
 
 ## Status
 
-Plume is an alpha release (0.1.0-alpha.3). It has been used to send mail as `@apache.org` from Gmail on
+Plume is an alpha release (0.1.0-alpha.4). It has been used to send mail as `@apache.org` from Gmail on
 macOS (Apple silicon), for new messages and for replies written inline in a thread, with To, Cc and Bcc.
 The Linux build passes its tests but has had little real use. Attachments and HTML formatting are not
 supported, so messages go out as plain text, and there is no Windows support yet. The extension is not in
@@ -53,8 +53,9 @@ sh -c "$(curl -fsSL https://raw.githubusercontent.com/CalvinKirs/plume/main/pack
 Both routes end in the same place. Then download `plume-extension.zip` from the
 [releases page](https://github.com/CalvinKirs/plume/releases) and unzip it. Open `chrome://extensions`,
 turn on Developer mode, choose Load unpacked and select the unzipped folder. Enter your `@apache.org`
-address in the extension's options, plus your name if you want it shown to recipients, and restart the
-browser.
+address in the extension's options, plus your name if you want it shown to recipients. If Gmail was already
+open, refresh its tab with F5 (Cmd+R on macOS) to load the extension. If Chrome cannot find the local Plume
+program after installation, quit Chrome completely and reopen it once.
 
 The [user guide](docs/user-guide.md) covers the rest, including troubleshooting and uninstalling.
 
