@@ -15,8 +15,3 @@ Plume.api.runtime.onMessage.addListener((msg, _sender, reply) => {
     return true; // answer asynchronously
   }
 });
-
-// Firefox's toolbar button gives users a visible entry point to settings and recent sends.
-if (Plume.api.action) {
-  Plume.api.action.onClicked.addListener(() => Plume.api.runtime.openOptionsPage());
-}

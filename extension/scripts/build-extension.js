@@ -66,6 +66,8 @@ function referencedFiles(manifest) {
   refs.push(...(bg.scripts || []));
   for (const cs of manifest.content_scripts || []) refs.push(...(cs.js || []), ...(cs.css || []));
   if (manifest.options_ui && manifest.options_ui.page) refs.push(manifest.options_ui.page);
+  if (manifest.action && manifest.action.default_popup) refs.push(manifest.action.default_popup);
+  refs.push(...Object.values((manifest.action && manifest.action.default_icon) || {}));
   refs.push(...Object.values(manifest.icons || {}));
   return refs;
 }

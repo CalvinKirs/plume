@@ -64,6 +64,9 @@ bare address is shown. Save, then quit the browser completely (Cmd+Q on macOS) a
 only needed once, so that the browser notices the program you registered. After you update the extension,
 press its Reload button on `chrome://extensions` and refresh the Gmail tab.
 
+Click the Plume icon in the browser toolbar to see recent send attempts. The popup links to the full
+history and to Settings. If the icon is inside Chrome's Extensions menu, you can pin it to the toolbar.
+
 ### Firefox
 
 Plume works in Firefox. It has been tried by hand on macOS, and not yet on Linux. Firefox only runs extensions
@@ -78,7 +81,7 @@ node extension/scripts/build-extension.js firefox
 
 Then open `about:debugging#/runtime/this-firefox`, choose Load Temporary Add-on and select `manifest.json`
 in `dist/extension-firefox`. Open the add-on's preferences on `about:addons` and enter your address as
-described above. The Plume toolbar button also opens its options and recent sends.
+described above. The Plume toolbar button opens the same recent sends popup as in Chrome.
 
 If the button does not appear on Gmail, open the extension's Permissions on `about:addons` and allow it to
 run on `mail.google.com`. Firefox installed as a Snap package on Ubuntu may not be allowed to start the
@@ -100,9 +103,9 @@ If you want to check what Plume will send before sending it, hold Option (Alt on
 button. Nothing is sent. Plume shows the recipients, the subject, the size of the text and whether it found
 the reply headers.
 
-The Options page of the extension lists your last 50 sends, with the time, result, recipients, subject, the
-relay's queue reply and the Message-ID, so you can check a message even if you missed the notification.
-The list stays in your browser and never contains message text. "Clear the list" empties it.
+The popup shows your five most recent send attempts. Choose "View all" to see the last 50, with the time,
+result, recipients, subject, the relay's queue reply and the Message-ID. The list stays in your browser
+and never contains message text. "Clear the list" empties it. Sender address and name stay in Settings.
 
 Messages go out as plain text. Quoted text in replies becomes lines that start with "> ", which is what
 mailing lists expect. Formatting, inline images and attachments are not sent.

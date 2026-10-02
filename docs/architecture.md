@@ -127,8 +127,8 @@ holds every Gmail-specific selector and reads recipients, subject and body from 
 `reply-context.js` looks up the Message-ID and References of the message being answered.
 
 `background.js` receives the draft and sends it to the program with `sender.js`, using native messaging by
-default. It also adds the result to the list of recent sends kept by `history.js`. `settings.js` and
-`options.html` deal with the extension's settings and show that list.
+default. It also adds the result to the list of recent sends kept by `history.js`. The toolbar
+`popup.html` shows the latest five attempts, `history.html` shows all 50, and `options.html` holds settings.
 
 ### One codebase, one target per browser
 
@@ -139,13 +139,13 @@ specific to a browser lives in `targets/<browser>/`:
 
 - `manifest.patch.json` is a JSON merge patch applied to the base `manifest.json`, which is the Chrome
   manifest. The Chrome patch is empty. The Firefox patch removes the Chrome-only keys, replaces the service
-  worker with an event page and declares the add-on ID.
+  worker with an event page, places the toolbar action in the navbar and declares the add-on ID.
 - Files that only that browser needs. Chrome's background is a service worker that has to load its own
   scripts, so `targets/chrome/service-worker.js` does that. Firefox lists the same scripts in its manifest.
 
 `scripts/build-extension.js <target>` assembles a package from the shared sources and one target, and refuses
 to build if the manifest points at a file that was not packaged. Tests check that Chrome's package is exactly
-the base manifest, that Firefox differs from it only in the four keys that have to differ, and that no package
+the base manifest, that Firefox differs from it only in the keys that have to differ, and that no package
 contains another target's files. Adding a browser means adding a directory under `targets/`. A change for one
 browser cannot reach another, because it is not in the code they share.
 

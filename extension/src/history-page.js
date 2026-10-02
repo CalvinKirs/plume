@@ -1,0 +1,39 @@
+const $ = (id) => document.getElementById(id);
+
+function cell(row, text, cls) {
+  const td = document.createElement('td');
+  td.textContent = text;
+  if (cls) td.className = cls;
+  row.appendChild(td);
+  return td;
+}
+
+async function renderHistory() {
+  const list = await Plume.history.load(Plume.api.storage.local);
+  const body = $('history').querySelector('tbody');
+  body.textContent = '';
+  for (const e of list) {
+    const row = document.createElement('tr');
+    cell(row, new Date(e.at).toLocaleString());
+    cell(row, e.ok ? '✓ sent' : '✗ not sent', e.ok ? 'ok' : 'bad');
+    const all = [...e.to, ...e.cc.map((a) => 'Cc ' + a), ...e.bcc.map((a) => 'Bcc ' + a)];
+    cell(row, all.join(', ') || '-');
+    cell(row, e.subject || '(no subject)');
+    const relay = e.ok
+      ? [e.relayResponse, e.relaySeconds == null ? null : e.relaySeconds + ' s', e.messageId].filter(Boolean).join('\n')
+      : e.error;
+    const td = cell(row, relay || '', e.ok ? 'dim' : 'bad');
+    td.style.whiteSpace = 'pre-line';
+    body.appendChild(row);
+  }
+  $('history').hidden = $('clear').hidden = list.length === 0;
+  $('empty').hidden = list.length !== 0;
+}
+
+$('settings').addEventListener('click', () => Plume.api.runtime.openOptionsPage());
+$('clear').addEventListener('click', async () => {
+  await Plume.history.clear(Plume.api.storage.local);
+  renderHistory();
+});
+Plume.api.storage.onChanged.addListener((changes) => { if (changes.history) renderHistory(); });
+renderHistory();
