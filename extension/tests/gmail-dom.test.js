@@ -16,6 +16,13 @@ test('finds a compose and reads recipients, subject and body', () => {
   assert.strictEqual(d.text, '+1\n\nthanks');
 });
 
+test('reads an address still being typed in a recipient field', () => {
+  const doc = page(composeHtml());
+  const [compose] = gmail.findComposeWindows(doc);
+  compose.querySelector('[name="to"]').innerHTML = '<input role="combobox" value="friend@example.org">';
+  assert.deepStrictEqual(gmail.readDraft(compose).to, ['friend@example.org']);
+});
+
 test('works with a Chinese UI (labels differ, classes do not)', () => {
   // Chinese interface: the labels for "Send" and "Discard draft", written as Unicode escapes.
   const doc = page(composeHtml({ send: '\u53d1\u9001', discard: '\u653e\u5f03\u8349\u7a3f' }));
@@ -95,7 +102,7 @@ test('body fallback: no visible editor gives an empty string, and the editors ar
 
 test('recipients are never read from received messages or from the editor', () => {
   const doc = page(`<div role="main"><div class="thread">
-    <div class="a3s"><div name="bcc"><span email="attacker@evil.example"></span></div>
+    <div class="a3s"><div name="bcc"><span email="attacker@evil.example"></span><input value="typed@evil.example"></div>
       <input name="bcc" value="also@evil.example"></div>
     <div class="reply">
       <div class="hdr"><div name="to"><span email="dev@apache.org"></span></div><input name="subjectbox" value="Re: x"></div>

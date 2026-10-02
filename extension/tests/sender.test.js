@@ -27,6 +27,7 @@ test('native: host errors, missing host, forbidden id and early exit become read
   assert.deepStrictEqual(await run(async () => ({ ok: false, error: 'relay rejected the login' })), { ok: false, error: 'relay rejected the login' });
   assert.match((await run(async () => { throw new Error('Specified native messaging host not found.'); })).error, /plume setup/);
   assert.match((await run(async () => { throw new Error('No such native application org.plume.host'); })).error, /plume setup/, 'Firefox wording');
+  assert.doesNotMatch((await run(async () => { throw new Error('No such native application org.plume.host'); })).error, /restart Chrome/);
   assert.match((await run(async () => { throw new Error('Access to the specified native messaging host is forbidden.'); })).error, /extension id/);
   assert.match((await run(async () => undefined)).error, /exited early/);
   assert.match((await run(async () => { throw new Error('boom'); })).error, /boom/);

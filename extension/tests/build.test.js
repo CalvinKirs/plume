@@ -3,6 +3,7 @@ const assert = require('node:assert');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
+const vm = require('node:vm');
 const { assertSafeOutput, applyMergePatch, listTargets, buildManifest, packageFiles, referencedFiles, build } = require('../scripts/build-extension');
 
 const ROOT = path.resolve(__dirname, '..');
@@ -36,7 +37,7 @@ test('Firefox differs from Chrome in exactly the keys that have to differ', () =
   const ff = buildManifest('firefox');
   const differing = [...new Set([...Object.keys(source), ...Object.keys(ff)])]
     .filter((k) => JSON.stringify(source[k]) !== JSON.stringify(ff[k])).sort();
-  assert.deepStrictEqual(differing, ['background', 'browser_specific_settings', 'key', 'version_name']);
+  assert.deepStrictEqual(differing, ['action', 'background', 'browser_specific_settings', 'key', 'version_name']);
   for (const k of ['manifest_version', 'name', 'version', 'permissions', 'host_permissions', 'content_scripts', 'options_ui', 'icons']) {
     assert.deepStrictEqual(ff[k], source[k], `${k} must be shared`);
   }
@@ -48,6 +49,23 @@ test('Firefox: an event page whose scripts load the platform layer first and the
   assert.strictEqual(ff.background.scripts[0], 'src/platform.js');
   assert.strictEqual(ff.background.scripts.at(-1), 'src/background.js');
   assert.match(ff.browser_specific_settings.gecko.id, /^[^@\s]+@[^@\s]+$/, 'an add-on id in email form');
+});
+
+test('Firefox has a toolbar action that opens Plume options', () => {
+  const ff = buildManifest('firefox');
+  assert.strictEqual(ff.action.default_area, 'navbar');
+  assert.strictEqual(ff.action.default_title, 'Open Plume options');
+  assert.strictEqual(ff.action.default_icon['32'], 'icons/icon-32.png');
+  let click;
+  let opened = false;
+  const context = { Plume: { api: {
+    action: { onClicked: { addListener: (fn) => { click = fn; } } },
+    runtime: { onMessage: { addListener: () => {} }, openOptionsPage: () => { opened = true; } },
+  } } };
+  vm.runInNewContext(fs.readFileSync(path.join(ROOT, 'src', 'background.js'), 'utf8'), context);
+  assert.strictEqual(typeof click, 'function');
+  click();
+  assert.ok(opened);
 });
 
 test('the Chrome service worker loads the same scripts, in the same order, as the Firefox event page', () => {

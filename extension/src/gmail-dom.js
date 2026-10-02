@@ -35,7 +35,8 @@
   function recipients(compose, field) {
     const found = [];
     const trusted = (el) => !el.closest(UNTRUSTED);
-    [...compose.querySelectorAll(`input[name="${field}"], textarea[name="${field}"]`)].filter(trusted)
+    // Gmail may keep an unfinished address in the editor inside the named recipient row.
+    [...compose.querySelectorAll(`input[name="${field}"], textarea[name="${field}"], [name="${field}"] input, [name="${field}"] textarea`)].filter(trusted)
       .forEach((el) => found.push(...emailsIn(el.value)));
     [...compose.querySelectorAll(`[name="${field}"] [email], [name="${field}"] [data-hovercard-id]`)].filter(trusted)
       .forEach((el) => found.push(...emailsIn(el.getAttribute('email') || el.getAttribute('data-hovercard-id'))));
